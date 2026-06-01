@@ -26,7 +26,7 @@ After any code change, always update docs/:
 - **Active plan file:** mark completed items `[x]`; change scope or add checkboxes only if scope changed (routine progress stays in the plan, not in PROGRESS).
 - DECISIONS.md: append any architectural decision made during this session.
 - INDEX.md: update if a file was created, deleted, or changed its purpose.
-- **ARCHITECTURE.md:** update when the change affects runtime architecture: module boundaries (`src/core|operations|adapters|mcp_servers`), major flows (discover → choose → walk → build), tool transport/execution (MCP / `<tool_call>`), or artifacts/logs layout.
+- **ARCHITECTURE.md:** update when the change affects runtime architecture: module boundaries (`src/core|operations|adapters|mcp_servers|cli`), major flows (semantic router → simple vs agent → MCP tools → HITL), tool transport (MCP stdio / function calling), or data layout (`data/banking.db`).
 - **PROGRESS.md:** only when the wave is closed (step 7) — see "Archive wave" below.
 
 # Plans

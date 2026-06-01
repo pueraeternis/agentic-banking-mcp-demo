@@ -7,15 +7,14 @@
 - Formatting: Must pass `ruff format` and `ruff check` (rules in `pyproject.toml` `[tool.ruff]`; CI runs the same).
 - Imports: **Top-level only** (`PLC0415`). No lazy imports inside methods/properties unless Ruff is explicitly suppressed with a documented reason.
 - Imports used only in annotations (with `from __future__ import annotations`): put under `if TYPE_CHECKING:` (`TC002`); keep runtime imports minimal.
-- **Exception:** MCP tool handlers registered via `mcp.add_tool` — keep `Context` (and `FastMCP` if needed) as **runtime** imports; FastMCP calls `inspect.signature(..., eval_str=True)` on nested functions (`per-file-ignores` for `TC002` on `tools_*.py`).
-- Lazy singletons: prefer `@functools.cache` on a factory function over module `global` + reassignment (`PLW0603`). If state must be cleared (HTTP lifespan), use a small holder object (`store.set(None)`) instead of `global _state`.
-- HTTP server bind defaults (`0.0.0.0`): use a named constant + `noqa: S104` when intentional for containers; always allow override via env (e.g. `WEB_SEARCH_HOST`).
+- **Exception:** MCP tool handlers in `src/mcp_servers/` — keep `Context` (and `FastMCP` if needed) as **runtime** imports; FastMCP calls `inspect.signature(..., eval_str=True)` on nested functions (`per-file-ignores` for `TC002` on `src/mcp_servers/*.py`).
+- Lazy singletons: prefer `@functools.cache` on a factory function over module `global` + reassignment (`PLW0603`). If state must be cleared (e.g. MCP lifespan), use a small holder object (`store.set(None)`) instead of `global _state`.
 - Nested `async with` / `with` with independent managers: combine with comma (`SIM117`).
 - **`scripts/` CLI modules:** if using a shebang, mark the file executable (`chmod +x`, `EXE001`). Multi-line module docstrings: summary on the **second** line after `"""` (`D213`). Prefer `from mcp import types` over `import mcp.types as types` (`PLR0402`).
 - Exceptions after `isinstance` / type checks: raise **`TypeError`** for wrong types (`TRY004`); use **`ValueError`** for valid type but invalid value or business rule.
-- Type checking: **basedpyright** (IDE); config in `pyproject.toml` (`[tool.basedpyright]`). After `uv sync`, the checker must resolve deps from project `.venv` (e.g. `playwright`).
+- Type checking: **basedpyright** in the IDE when `[tool.basedpyright]` is present in `pyproject.toml`. After `uv sync`, resolve deps from project `.venv`.
 - Dependencies: Use `uv` only. No duplications.
-- Optional instance fields (`self._x: T | None`): pyright does **not** narrow `self._x` after assignment in the same method. Use a **local** variable for immediate use (`playwright = await ...; await playwright.chromium...`), or an explicit `assert self._x is not None` where a local is awkward.
+- Optional instance fields (`self._x: T | None`): pyright does **not** narrow `self._x` after assignment in the same method. Use a **local** variable for immediate use, or an explicit `assert self._x is not None` where a local is awkward.
 
 # Coding Standards
 - Type Annotations: Mandatory in all signatures. Use `Annotated` + `Field` for Pydantic.
@@ -24,15 +23,14 @@
   - Public API/MCP tools: Full description, arguments, and return types.
   - NumPy/Google sections (`Args`, `Raises`, …): **blank line after the last section** before closing `"""` (`D413`).
 - Prefer `all(...)` / `any(...)` over manual loops when Ruff `SIM110`/`SIM118` applies; merge duplicate `if` branches with `or` / shared condition (`SIM114`).
-- `socket.getaddrinfo` sockaddr: coerce address with `str(sockaddr[0])` before `ip_address` / `set[str]` — stubs type index 0 as `str | int`.
-- Entrypoints: Use `uvicorn` or similar app runners for services. Avoid `__main__` logic in production modules.
+- Entrypoints: `main.py` delegates to `src/cli/repl.py`. Keep `if __name__ == "__main__"` thin in `main.py` only.
 - Logging: Lazy formatting only: `logger.info("Msg %s", variable)`.
 - Clean Output: Provide ONLY functional code. No conversational text inside code blocks.
 
 # Blocking Calls & Event Loops
 - Inside **async** framework code (e.g. FastAPI handlers, `async def` tasks), do not call **long-running blocking** sync APIs on the loop thread; use `asyncio.to_thread`, async-native clients, or delegate to a worker.
-- In **fully synchronous** entrypoints (CLI, scripts, sync services), normal blocking I/O is acceptable when it matches that stack—do not add `asyncio.to_thread` or `asyncio.run` “for consistency” alone.
-- **OpenAI-compatible inference** (single request/response over HTTP): **sync** clients are often the simplest fit from sync orchestration; prefer **async** clients when the caller already lives on an asyncio loop (e.g. inside FastAPI) and you need concurrency or streaming without blocking the loop.
+- In **fully synchronous** entrypoints (this REPL, `scripts/seed_db.py`), normal blocking I/O is acceptable—`sqlite3`, sync OpenAI client, MCP stdio—when it matches that stack. Do not add `asyncio.run` “for consistency” alone.
+- **OpenAI-compatible inference** (Yandex): **sync** client from the REPL/agent loop; prefer **async** only if the caller already lives on an asyncio loop and needs concurrency without blocking it.
 
 # Init Files
 - `__init__.py`: Keep empty unless explicit re-exports are needed.

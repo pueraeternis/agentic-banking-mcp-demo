@@ -42,14 +42,14 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"src/mcp_servers/tools_*.py" = ["TC002"]
+"src/mcp_servers/*.py" = ["TC002"]
 "tests/**/*.py" = ["D", "S101"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
 [tool.ruff.lint.isort]
-known-first-party = ["core", "operations", "adapters", "mcp_servers"]
+known-first-party = ["core", "operations", "adapters", "mcp_servers", "cli"]
 
 [tool.ruff.format]
 quote-style = "double"

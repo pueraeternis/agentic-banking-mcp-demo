@@ -5,23 +5,26 @@
 - SOLID: Strictly enforce Single Responsibility, Interface Segregation, and Dependency Inversion.
 - **Concurrency / I/O (match the runtime, do not dogmatize):**
   - **Prefer `async`/`await`** in **ASGI** apps (**FastAPI**, Starlette, etc.): route handlers, dependencies that do I/O, WebSockets, streaming responses, and anywhere **one event loop** drives concurrent non-blocking work.
-  - **Sync blocking I/O is fine** in CLIs, batch scripts, thread/process workers, WSGI-style stacks, and plain **request/response** calls to **OpenAI-compatible HTTP APIs** (vLLM, Triton OpenAI frontends, etc.) when callers are **already synchronous** and there is **no** shared asyncio loop—**do not** require an async HTTP client + `asyncio.run` per call only for style.
+  - **Sync blocking I/O is fine** in CLIs, batch scripts, thread/process workers, WSGI-style stacks, and plain **request/response** calls to **OpenAI-compatible HTTP APIs** (Yandex AI Studio, vLLM, etc.) when callers are **already synchronous** and there is **no** shared asyncio loop—**do not** require an async HTTP client + `asyncio.run` per call only for style.
   - **Never** block the **asyncio event loop** with long sync network or disk calls; offload (`asyncio.to_thread`, async-native clients, workers) when inside async framework code.
   - Avoid pointless **sync→async→sync** bridges (e.g. wrapping every call in `asyncio.run`) unless there is a clear concurrency or streaming requirement.
-- **Infrastructure boundaries:** Keep external I/O (HTTP, DB, queues, GPUs) at the **adapter / infrastructure** edge; application/domain code depends on ports, not concrete clients.
-- Statelessness: Services must hold no mutable state. Persistent state lives in DB/Redis only.
+- **Infrastructure boundaries:** Keep external I/O (HTTP LLM, MCP stdio, SQLite) at the **adapter / infrastructure** edge; `operations/` depends on domain types only, not concrete clients.
+- **Statelessness (services):** Production services should not hold mutable session state in process memory. **Demo exception for this repo:** the REPL keeps in-memory `messages[]` per session plus SQLite (`docs/DECISIONS.md`); no Redis.
 
 # Error Handling
 - Hierarchy: Use one **application error** base type and subclasses; domain rules raise **domain** errors, adapters raise **infrastructure** errors.
 - Separation:
   - **Domain**: logic / validation violations (handled in application services).
-  - **Infrastructure**: external systems—HTTP, DB, GPU, queues (handled at adapter boundary).
+  - **Infrastructure**: external systems—HTTP, DB, MCP (handled at adapter boundary).
 
 # Dependencies
-- DI: Always inject clients/repositories via constructor. Never instantiate infra-clients inside logic.
+- DI: Always inject clients/repositories via constructor. Never instantiate infra-clients inside `operations/` logic.
 
-# Agent chat tool execution (Wave 27)
+# Agent, MCP, and HITL (banking demo)
 
-- For **`AgentCore.handle_message`** and **`invoke_tool_update_session`**, route parsed **`<tool_call>`** work through **`AgentCore._invoke_tool`**. When **`mcp_stdio`** is set (default REPL/`ask` path with **`CHAT_MCP`** enabled), that means MCP **`tools/call`** to **`src/mcp_servers/server.py`** — **do not** add new **`ToolRegistry.invoke`** calls from `chat_orchestrator_service.py` for those flows.
-- **`ToolRegistry.invoke`** remains correct **inside** MCP tool handlers on the server and for **direct** CLI (**`chat_cli tool`**) that bypasses the agent loop.
-
+- **REPL orchestrator** (`src/cli/`): semantic router → simple chat or agent loop; rich Action/Observation; HITL after `prepare_transfer`.
+- **Tool execution:** Agent loop calls banking logic **only** via MCP **`tools/call`** to `src/mcp_servers/banking_server.py` (stdio subprocess). Do not call SQLite or `operations/` directly from the agent loop.
+- **Tool schemas for LLM:** Build OpenAI `tools` from MCP **`tools/list`** only (no duplicated JSON in the agent).
+- **ReAct:** OpenAI **function calling** loop (`while` + `tool_calls`), max 8 iterations per invocation. **No** XML `<tool_call>` parsing. **No** LangGraph for v1.
+- **HITL:** After successful `prepare_transfer`, stop the agent loop and prompt the user; on denial CLI calls `cancel_transfer` via MCP; on approval append a user confirmation message and run a **new** agent invocation so the heavy model calls `commit_transfer`.
+- **No** standalone CLI to invoke MCP tools without the agent (`chat_cli tool` pattern is out of scope).

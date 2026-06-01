@@ -1,11 +1,13 @@
 # MCP & Agentic Guidelines
 
 # LangGraph Policy
-- Use ONLY if the graph contains ≥2 nodes with conditional transitions. For simple tasks, use standard Python async functions.
+- **Not used** in v1. Use a plain Python `while` loop for function-calling ReAct.
+- LangGraph only if a future phase needs ≥2 nodes with conditional transitions and the team explicitly adopts it.
 
 # Implementation
-- Server Structure: Logic in `src/core/` and `src/operations/`. `src/mcp_servers/` is purely for interface mapping.
+- Server: `src/mcp_servers/banking_server.py` (FastMCP, stdio). Logic in `src/core/` and `src/operations/`; `mcp_servers/` is interface mapping only.
+- Tools (v1): `find_client`, `get_account_balance`, `prepare_transfer`, `commit_transfer`, `cancel_transfer`.
 - Tool Contracts:
   - Every tool requires Pydantic `args_schema` + `Annotated` + `Field`.
-  - Return responses as Pydantic models.
-- Errors: Catch application/domain errors and map to stable tool payloads (e.g. `{"error": "...", "code": "..."}`); unknown errors use a generic code.
+  - Return responses as Pydantic models (or structured dicts serialized from them).
+- Errors: Catch application/domain errors and map to stable payloads, e.g. `{"ok": false, "code": "INSUFFICIENT_FUNDS", "message": "..."}`; unknown errors use a generic code such as `INTERNAL_ERROR`.

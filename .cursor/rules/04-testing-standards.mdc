@@ -1,15 +1,14 @@
 # Testing & QA Standards
 
 # Hierarchy
-- Unit Tests: `src/core/`. Use `pytest` + `pytest-mock` (library).
-- Integration Tests: Verify interaction between layers.
-- Smoke Tests: `tests/smoke/`. Verify heartbeat/connectivity for infra services (Triton, vLLM, DB).
-  Must be executable scripts returning exit code 0 (success) or 1 (fail).
+- **Unit tests:** `tests/operations/` — banking use cases (`prepare` / `commit` / `cancel`, insufficient funds). No LLM, no MCP process.
+- **Integration tests:** Optional later (MCP handler + in-memory or temp SQLite). Not required for v1 plan.
+- **Manual smoke:** REPL lecture script in `docs/plans/01-banking-agent-mcp-demo.md` (router, balance, transfer + HITL).
 
 # Configuration
-- `pyproject.toml` must include: `asyncio_mode = "auto"`.
-- Coverage: `pytest --cov` with enforcement `--cov-fail-under=90`.
+- When pytest is added: prefer `pytest` + `pytest-mock`; set `asyncio_mode = "auto"` only if async tests exist.
+- Coverage: enforce `--cov-fail-under` in CI **only after** the project adopts coverage in `pyproject.toml`. Until then, run `pytest` without a hard gate.
 
 # Execution
-- Parameterization: Mandatory use of `pytest.mark.parametrize` for edge cases.
-- Auto-generation: Cursor MUST suggest a corresponding test file for every generated module.
+- Use `pytest.mark.parametrize` for edge cases (invalid states, zero amounts, unknown clients).
+- New modules under `src/operations/` should get corresponding tests in `tests/operations/`.
