@@ -12,60 +12,63 @@ Navigation map for the repository. Update when files are created or roles change
 | `docs/PROGRESS.md` | Active plan pointer + archived wave journal |
 | `docs/plans/01-banking-agent-mcp-demo.md` | Implementation checklist (plan 01) |
 
-## Entry and config (planned)
+## Entry and config
 
 | Path | Purpose |
 |------|---------|
-| `main.py` | Entry: start REPL |
-| `pyproject.toml` | Dependencies (`uv`) |
-| `.env.example` | Template for Yandex API and model slugs (no secrets) |
+| `main.py` | Entry: adds `src/` to path, starts REPL |
+| `pyproject.toml` | Dependencies (`uv`), Ruff, pytest |
+| `.env.example` | Template for Yandex API and model slugs |
 | `.env` | Local secrets (gitignored) |
 | `data/banking.db` | SQLite database (gitignored, created by seed) |
 
-## Source — `src/core/` (planned)
+## Source — `src/core/`
 
 | Path | Purpose |
 |------|---------|
-| `src/core/models.py` | Domain entities: client, account, transfer |
+| `src/core/models.py` | Domain entities: `Client`, `Account`, `Transfer` |
 | `src/core/errors.py` | `AppError` and banking-specific errors |
-| `src/core/constants.py` | Domain constants (currency, statuses) |
+| `src/core/constants.py` | `TransferStatus`, currency `RUB` |
 
-## Source — `src/operations/` (planned)
+## Source — `src/operations/`
 
 | Path | Purpose |
 |------|---------|
 | `src/operations/banking.py` | Use cases: find client, balance, prepare/commit/cancel transfer |
 
-## Source — `src/adapters/` (planned)
+## Source — `src/adapters/`
 
 | Path | Purpose |
 |------|---------|
-| `src/adapters/config.py` | Environment and model URIs |
+| `src/adapters/config.py` | `AppConfig.from_env()`, model URIs |
+| `src/adapters/database.py` | SQLite path holder and `get_connection()` |
 | `src/adapters/llm_client.py` | OpenAI SDK client for Yandex endpoint |
 | `src/adapters/memory.py` | In-memory chat `messages[]` per session |
 | `src/adapters/tool_schema.py` | MCP `list_tools` → OpenAI tools JSON |
 | `src/adapters/router.py` | Semantic router (`simple` \| `agent`) |
-| `src/adapters/mcp_client.py` | MCP stdio subprocess client |
+| `src/adapters/mcp_client.py` | MCP stdio subprocess client (sync facade) |
 | `src/adapters/agent_loop.py` | ReAct loop via function calling (max 8 steps) |
 
-## Source — `src/mcp_servers/` (planned)
+## Source — `src/mcp_servers/`
 
 | Path | Purpose |
 |------|---------|
 | `src/mcp_servers/banking_server.py` | FastMCP server; five banking tools → `operations/` |
 
-## Source — `src/cli/` (planned)
+## Source — `src/cli/`
 
 | Path | Purpose |
 |------|---------|
-| `src/cli/repl.py` | Interactive REPL, rich output, HITL orchestration |
+| `src/cli/repl.py` | Interactive REPL, rich Action/Observation, HITL |
 
-## Scripts and tests (planned)
+## Scripts and tests
 
 | Path | Purpose |
 |------|---------|
 | `scripts/seed_db.py` | Create schema and seed Ivanov / Petrov / Sidorov |
 | `tests/operations/test_banking.py` | Unit tests for transfer rules (no LLM) |
+| `tests/integration/test_mcp_banking.py` | MCP stdio integration (tools + temp SQLite) |
+| `tests/integration/conftest.py` | MCP test fixtures and DB seed helper |
 
 ## Cursor rules
 
@@ -79,4 +82,4 @@ Navigation map for the repository. Update when files are created or roles change
 ## External references
 
 - [Yandex AI Studio — models](https://aistudio.yandex.ru/docs/en/ai-studio/concepts/generation/models.html)
-- Practice: `/home/administrator/OTUS/practice/yandex-gpt-api` — `examples/tools_demo.py`, `src/config.py`, `src/clients/wrapper.py`
+- Practice: `/home/administrator/OTUS/practice/yandex-gpt-api` — `examples/tools_demo.py`

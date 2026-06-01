@@ -4,11 +4,36 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "mcp>=1.27.2",
+    "openai>=2.38.0",
+    "pydantic>=2.13.4",
+    "python-dotenv>=1.2.2",
+    "rich>=15.0.0",
+]
 
 [dependency-groups]
 dev = [
+    "pytest>=9.0.3",
     "ruff>=0.15.15",
+]
+
+[tool.basedpyright]
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+extraPaths = ["src"]
+executionEnvironments = [
+    { root = "src" },
+    { root = "scripts", extraPaths = ["src"] },
+    { root = "tests", extraPaths = ["src", "."] },
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+markers = [
+    "integration: MCP stdio subprocess tests (slower)",
 ]
 
 [tool.ruff]
@@ -43,7 +68,12 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "src/mcp_servers/*.py" = ["TC002"]
-"tests/**/*.py" = ["D", "S101"]
+"src/adapters/*.py" = ["TC001", "TC002", "TC003", "PLR0913", "D107"]
+"src/core/errors.py" = ["N818", "D107"]
+"src/operations/*.py" = ["TRY003", "TC003"]
+"src/**/__init__.py" = ["D104"]
+"scripts/*.py" = ["EXE001", "PLC0415"]
+"tests/**/*.py" = ["D", "S101", "PLR2004", "TC003", "E501"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

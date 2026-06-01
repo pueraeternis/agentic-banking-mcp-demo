@@ -2,7 +2,7 @@
 
 # Hierarchy
 - **Unit tests:** `tests/operations/` — banking use cases (`prepare` / `commit` / `cancel`, insufficient funds). No LLM, no MCP process.
-- **Integration tests:** Optional later (MCP handler + in-memory or temp SQLite). Not required for v1 plan.
+- **Integration tests:** `tests/integration/` — MCP stdio subprocess + temp SQLite (`@pytest.mark.integration`). No LLM.
 - **Manual smoke:** REPL lecture script in `docs/plans/01-banking-agent-mcp-demo.md` (router, balance, transfer + HITL).
 
 # Configuration

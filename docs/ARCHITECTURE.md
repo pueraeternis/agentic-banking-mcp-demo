@@ -61,7 +61,7 @@ YC_API_KEY=
 MODEL_ROUTER=qwen3.5-35b-a3b-fp8
 MODEL_AGENT=qwen3-235b-a22b-fp8
 DATABASE_PATH=data/banking.db
-MCP_SERVER_MODULE=src.mcp_servers.banking_server
+MCP_SERVER_MODULE=mcp_servers.banking_server
 ```
 
 ## Semantic router

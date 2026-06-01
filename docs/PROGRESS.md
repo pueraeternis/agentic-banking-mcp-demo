@@ -7,4 +7,5 @@
 
 ## Journal
 
-_No waves archived yet. Documentation-only session (2026-06-01): decisions, architecture, plan 01, index._
+_Implementation of plan 01 completed (2026-06-01): full stack (domain, SQLite, MCP server, router, agent loop, HITL REPL). Archive this wave in PROGRESS after the commit._
+
