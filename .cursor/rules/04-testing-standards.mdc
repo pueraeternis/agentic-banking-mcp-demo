@@ -1,0 +1,15 @@
+# Testing & QA Standards
+
+# Hierarchy
+- Unit Tests: `src/core/`. Use `pytest` + `pytest-mock` (library).
+- Integration Tests: Verify interaction between layers.
+- Smoke Tests: `tests/smoke/`. Verify heartbeat/connectivity for infra services (Triton, vLLM, DB).
+  Must be executable scripts returning exit code 0 (success) or 1 (fail).
+
+# Configuration
+- `pyproject.toml` must include: `asyncio_mode = "auto"`.
+- Coverage: `pytest --cov` with enforcement `--cov-fail-under=90`.
+
+# Execution
+- Parameterization: Mandatory use of `pytest.mark.parametrize` for edge cases.
+- Auto-generation: Cursor MUST suggest a corresponding test file for every generated module.

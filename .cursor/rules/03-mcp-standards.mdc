@@ -1,0 +1,11 @@
+# MCP & Agentic Guidelines
+
+# LangGraph Policy
+- Use ONLY if the graph contains ≥2 nodes with conditional transitions. For simple tasks, use standard Python async functions.
+
+# Implementation
+- Server Structure: Logic in `src/core/` and `src/operations/`. `src/mcp_servers/` is purely for interface mapping.
+- Tool Contracts:
+  - Every tool requires Pydantic `args_schema` + `Annotated` + `Field`.
+  - Return responses as Pydantic models.
+- Errors: Catch application/domain errors and map to stable tool payloads (e.g. `{"error": "...", "code": "..."}`); unknown errors use a generic code.

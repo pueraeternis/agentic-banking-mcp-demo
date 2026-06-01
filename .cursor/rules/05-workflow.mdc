@@ -1,0 +1,90 @@
+# Agent Workflow & Documentation Protocol
+
+# Development Flow (per wave)
+1. Discuss task; record decisions in `docs/DECISIONS.md`.
+2. Write plan to `docs/plans/NN-name.md` (checkboxes per file/task).
+3. Set `Active plan` in `docs/PROGRESS.md` only (no checkbox copy yet).
+4. Implement; mark `[x]` in the **active plan** as work completes.
+5. Test (unit; smoke/integration when affected).
+6. Commit (see `06-git-workflow.mdc`).
+7. Archive the wave in `docs/PROGRESS.md` (append journal; clear or update `Active plan`).
+
+# Session Types
+- Ask/Plan: High-level discussion and decomposition.
+  End with "запиши решения и сохрани план".
+  No code generation.
+- Agent: One plan item per chat. Code only.
+
+# Session Start (Mandatory)
+- Read @docs/INDEX.md — project navigation map.
+- Read @docs/PROGRESS.md — find `Active plan` pointer.
+- Read the active plan file from `docs/plans/`.
+- Proceed only after understanding current state and scope.
+
+# Session End (Mandatory)
+After any code change, always update docs/:
+- **Active plan file:** mark completed items `[x]`; change scope or add checkboxes only if scope changed (routine progress stays in the plan, not in PROGRESS).
+- DECISIONS.md: append any architectural decision made during this session.
+- INDEX.md: update if a file was created, deleted, or changed its purpose.
+- **ARCHITECTURE.md:** update when the change affects runtime architecture: module boundaries (`src/core|operations|adapters|mcp_servers`), major flows (discover → choose → walk → build), tool transport/execution (MCP / `<tool_call>`), or artifacts/logs layout.
+- **PROGRESS.md:** only when the wave is closed (step 7) — see "Archive wave" below.
+
+# Plans
+- Each development phase has its own file: `docs/plans/NN-name.md` (e.g. `02-mcp-http-smoke-script.md`).
+- Plans are immutable once started. Do not rewrite completed history in plan files.
+- **Working checklist:** checkboxes `[ ]` / `[x]` / `[-]` are maintained in the active plan during implementation.
+- Use checkboxes: `[ ]` pending, `[x]` done, `[-]` skipped with reason.
+
+# On-Demand Documentation Commands
+
+When user says "запиши решения" or "сохрани решения":
+- Extract all architectural decisions from current chat history.
+- Append to `docs/DECISIONS.md` in the specified format.
+- Use today's date in `[YYYY-MM-DD]` format for each entry.
+- Show the user what was written for review.
+
+When user says "запиши план" or "сохрани план":
+- Generate a structured plan based on current chat.
+- Save to `docs/plans/NN-name.md` with checkboxes per file/function.
+- Update `docs/PROGRESS.md`: set `Active plan: docs/plans/NN-name.md` only (optional 1–2 line goal summary; **do not** copy plan checkboxes).
+- Ask user to confirm the plan number and name before saving.
+
+# Archive wave (PROGRESS.md, after commit)
+When a plan wave is finished and committed:
+- Append a new section to the **end** of the journal in `docs/PROGRESS.md`.
+- Section header: plan path and short title (e.g. `## Wave: docs/plans/03-operations-layer.md`).
+- Copy all plan checkboxes with their **final** state (`[x]` / `[-]`).
+- Set `Active plan: none` or point to the next plan if already started.
+- Do not insert archived sections above older waves.
+
+# PROGRESS.md Roles
+- **Top:** `Active plan: docs/plans/NN-name.md` or `Active plan: none` — status pointer only.
+- **Body (journal):** archived completed waves; full checkbox lists copied from plans at archive time.
+- **Not** a live duplicate of the active plan during implementation.
+
+# PROGRESS.md Format (journal section)
+## Wave: docs/plans/NN-name.md — short title
+
+- [x] Completed task — `src/path/file.py`
+- [-] Skipped task — reason
+
+# PROGRESS.md Journal Order (Mandatory)
+- Journal sections are chronological: oldest wave at the top of the journal, newest **appended to the end**.
+- `Active plan` stays at the very top and is not part of journal ordering.
+- If ordering is broken, fix it in the same session as part of documentation sync.
+
+# INDEX.md Format
+- One line per file: `path/to/file.py` — what it contains and why it exists.
+- Grouped by directory.
+- Updated when files are created, deleted, or change purpose (session end or archive).
+
+# DECISIONS.md Format
+- New decision blocks are **appended to the end** of the file (chronological journal, top-to-bottom read order). Do not insert new entries above older ones.
+## [YYYY-MM-DD] Short title
+**Decision:** What was decided.
+**Reason:** Why.
+**Rejected:** What was considered and dropped (if any).
+
+# Periodic Lint (every few sessions)
+Open an Ask chat with @docs/INDEX.md @docs/PROGRESS.md @docs/DECISIONS.md and the active plan.
+Ask: "Are there contradictions between decisions and the current plan? What is outdated?"

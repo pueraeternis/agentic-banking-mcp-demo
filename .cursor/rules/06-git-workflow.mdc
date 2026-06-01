@@ -1,0 +1,32 @@
+# Git Workflow & Commit Policy
+
+# Commit Scope
+- One commit per completed plan item. No more, no less.
+- Keep commits atomic: one logical change per commit.
+- Do not mix unrelated refactors with behavior changes.
+
+# Commit Message Format
+- Use Conventional Commits: `type(scope): description`
+- Types: `feat`, `fix`, `refactor`, `test`, `chore`, `docs`
+- Message must explain intent (why), not only file changes (what).
+- Commit subject and body must be in English.
+- Example: `refactor(core): migrate state module to src layout`
+
+# What to Commit
+- Source code: `src/`.
+- Tests: `tests/`.
+- Project metadata: `pyproject.toml`, lockfiles, team config.
+- Documentation and planning: `docs/`, `.cursor/rules/`.
+- Include updated `docs/PROGRESS.md` when archiving a completed plan wave (final commit of the wave or a dedicated `docs:` archive commit). Do not require `PROGRESS.md` changes on every intermediate commit while the active plan is still open.
+
+# What NOT to Commit
+- Runtime artifacts: `artifacts/` (screenshots, smoke outputs, temp files).
+- Local environments and caches: `.venv`, tool caches, editor local state.
+- Secrets and credentials: `.env`, tokens, keys, auth dumps.
+- Never commit secrets even if accidentally staged.
+
+# Pre-Commit Checks (Mandatory)
+- Run targeted tests for changed behavior (unit first; smoke/integration when affected).
+- Ensure `uv run ruff format --check` and `uv run ruff check src tests scripts` pass (config in `pyproject.toml`).
+- Verify no unintended generated files are staged.
+- If uncertain whether a file is runtime noise — do not stage it.

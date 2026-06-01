@@ -1,0 +1,28 @@
+# Project Structure & Naming Conventions
+
+# Root Directory
+- `src/`: Main source code.
+- `tests/`: Test suite.
+- `docs/`: Project documentation and planning artifacts.
+  - `docs/plans/`: Per-phase plan files (NN-name.md). Immutable once started.
+  - `docs/PROGRESS.md`: Active plan pointer + chronological journal of completed waves (checkboxes archived from plans after commit).
+  - `docs/DECISIONS.md`: Accumulated architectural decisions across all phases.
+- `pyproject.toml`: Dependency management via `uv`.
+
+# Source Tree (src/)
+- `core/`: Domain models, `AppError` base classes.
+  - `core/types.py`: Shared domain types and enums.
+  - `core/constants.py`: Domain-level constants only.
+- `operations/`: Application use-cases (`search_urls`, fetch page HTML/markdown).
+- `adapters/`: Infrastructure (SearXNG HTTP, Playwright pool).
+- `mcp_servers/`: MCP transport only (lifespan, tool schema, delegation to operations).
+
+# Naming Rules
+- Files: `snake_case`.
+- Classes: `PascalCase`.
+- Tools (MCP): `verb_noun` (e.g., `get_model_status`).
+- Modules: Avoid `utils`, `common` or `helpers`. Use explicit names like `text_processor`, `db_client`.
+
+# Init Files
+- `__init__.py`: Keep empty unless explicit re-exports are needed.
+  Re-exports only in package-level `__init__.py` (e.g., `src/core/__init__.py`).
