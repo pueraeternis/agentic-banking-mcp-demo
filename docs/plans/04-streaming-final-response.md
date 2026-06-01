@@ -37,12 +37,12 @@
 ## 4. Tests
 
 - [x] `tests/adapters/test_llm_streaming.py` — mock stream chunks → assembled text + `on_token` call count (no live API)
-- [ ] Manual: `simple` greeting streams; «услуги банка» streams long catalog; «баланс Иванова» — pause on tools, then stream short final line
+- [x] Manual: `simple` greeting streams; «услуги банка» streams long catalog; «баланс Иванова» — pause on tools, then stream short final line (verified 2026-06-01)
 
 ## 5. Documentation sync (post-implementation)
 
 - [x] Update `docs/INDEX.md` — `llm_streaming.py`
-- [ ] Archive wave in `docs/PROGRESS.md` after commit
+- [x] Archive wave in `docs/PROGRESS.md` after commit
 
 ---
 

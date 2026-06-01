@@ -43,7 +43,7 @@
 ## 4. Documentation sync (post-implementation)
 
 - [x] `docs/ARCHITECTURE.md` — router `response_format`
-- [ ] Archive wave in `docs/PROGRESS.md` after commit
+- [x] Archive wave in `docs/PROGRESS.md` after commit
 
 ---
 
@@ -61,7 +61,8 @@
 
 ## Manual verification
 
-1. «Привет» → `simple` (stable JSON / route).
-2. «Баланс Иванова» / «услуги банка» → `agent`.
-3. Adversarial: model cannot wrap router output in markdown fences (or fallback still lands on `agent`).
-4. File log: router phase unchanged except optional `response_format` in debug if logged.
+- [x] «Привет» → `simple` (stable JSON / route).
+- [x] «Баланс Иванова» / «услуги банка» → `agent`.
+- [x] Extended REPL smoke: HITL prepare → да (commit) / нет (cancel), balances (2026-06-01).
+- [ ] Adversarial: model cannot wrap router output in markdown fences (or fallback still lands on `agent`).
+- [ ] File log: router phase unchanged except optional `response_format` in debug if logged.

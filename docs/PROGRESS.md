@@ -1,7 +1,7 @@
 # Progress
 
-**Active plan:** none (plan 05 implemented — commit when ready)  
-**Next:** manual smoke from `docs/plans/05-router-structured-output.md`
+**Active plan:** none  
+**Next:** lecture-ready; optional: plan 03 LLM-error log smoke, `STREAM_FINAL_RESPONSE=false` check
 
 ---
 
@@ -12,6 +12,8 @@
 - [x] `src/adapters/router.py` — `ROUTER_RESPONSE_SCHEMA`, `router_response_format()`, structured `route_user_message`, API fallback
 - [x] `tests/adapters/test_router.py`
 - [x] `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/INDEX.md`
+- [x] Manual REPL smoke (router, resource, HITL) — 2026-06-01
+- [x] `data/bank_services.md` — neutral bank name «Демо-Банк»
 
 ---
 
