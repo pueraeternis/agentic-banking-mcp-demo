@@ -41,7 +41,9 @@ class AppConfig:
         folder_id = os.getenv("YC_FOLDER_ID", "").strip()
         api_key = os.getenv("YC_API_KEY", "").strip()
         if not folder_id or not api_key:
-            print("Missing YC_FOLDER_ID or YC_API_KEY. Copy .env.example to .env.", file=sys.stderr)
+            sys.stderr.write(
+                "Missing YC_FOLDER_ID or YC_API_KEY. Copy .env.example to .env.\n",
+            )
             sys.exit(1)
 
         return cls(
