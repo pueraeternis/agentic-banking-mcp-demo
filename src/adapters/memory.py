@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
+# Roles sent to router / simple chat (Yandex: single system block at index 0).
+_DIALOG_ROLES = frozenset({"user", "assistant"})
+
 
 class SessionMemory:
     """Shared message list for router and agent paths."""
@@ -22,6 +25,10 @@ class SessionMemory:
     def get_messages(self) -> list[dict[str, Any]]:
         """Return a shallow copy of the session history."""
         return list(self._messages)
+
+    def get_dialog_messages(self) -> list[dict[str, Any]]:
+        """User/assistant turns only — for router and simple (no agent system or tool rows)."""
+        return [m for m in self._messages if m.get("role") in _DIALOG_ROLES]
 
     def clear(self) -> None:
         """Reset session history."""

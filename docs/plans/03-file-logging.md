@@ -53,13 +53,15 @@
 
 ---
 
-## Follow-ups (out of scope for v1)
+## Follow-ups
 
-- Router context diet: do not send full catalog-injected history to light router model (separate decision/plan if needed after logs confirm token/limit errors).
-- Dedicated `logs/mcp-….log` for FastMCP subprocess stderr.
+- [x] Router message list: `get_dialog_messages()` — fix HTTP 400 «System message must be at the beginning» (see `docs/DECISIONS.md` 2026-06-01 router LLM message list). RCA: file logs, not context-window limit.
+- [ ] Router context diet (optional): trim or summarize very long assistant replies before router (catalog answer still sent as user/assistant dialog).
+- [ ] Dedicated `logs/mcp-….log` for FastMCP subprocess stderr.
 
 ## Manual verification
 
 1. `uv run python main.py` → `logs/repl-*.log` created; startup line present.
 2. One `simple` + one `agent` turn → file contains `route=`, MCP tool lines.
 3. Induce API error (bad key or quota) → file has Yandex `status_code` and body; terminal still shows short Russian message.
+4. Regression: привет → услуги банка → баланс Иванова — router returns 200 after agent turn (no 400 on second router call).

@@ -48,7 +48,7 @@ Navigation map for the repository. Update when files are created or roles change
 | `src/adapters/paths.py` | `get_repo_root()`, `resolve_data_path()` (plan 02) |
 | `src/adapters/database.py` | SQLite path holder and `get_connection()` |
 | `src/adapters/llm_client.py` | OpenAI SDK client for Yandex endpoint |
-| `src/adapters/memory.py` | In-memory chat `messages[]` per session |
+| `src/adapters/memory.py` | In-memory chat `messages[]`; `get_dialog_messages()` for router/simple |
 | `src/adapters/tool_schema.py` | MCP `list_tools` → OpenAI tools JSON |
 | `src/adapters/router.py` | Semantic router (`simple` \| `agent`) |
 | `src/adapters/mcp_client.py` | MCP stdio subprocess client (sync facade) |

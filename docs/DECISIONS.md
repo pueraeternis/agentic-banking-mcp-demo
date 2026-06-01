@@ -89,3 +89,11 @@ Chronological journal. New entries are appended at the end.
 **Reason:** After plan 02, a long session (catalog resource + long assistant reply) caused router LLM calls to fail while a fresh REPL with the same balance question succeeded — failures were invisible because `repl.py` caught API errors without logging Yandex’s response. File logs make production-debugging possible without noisy terminals.
 
 **Rejected:** Logging only to stderr with default `logging.WARNING`; printing full API bodies to the rich console during the lecture; committing log files; separate MCP subprocess log file in v1 (orchestrator-side MCP client logging is enough); automatic retries on 429 (unchanged).
+
+## [2026-06-01] Router LLM message list (single system at start)
+
+**Decision:** **Router** and **simple** chat build the API `messages` list as `[{router|simple system}, *memory.get_dialog_messages()]`, where `get_dialog_messages()` returns only `user` and `assistant` rows. **Agent** keeps full `memory.get_messages()` (one agent `system` at index 0, then dialog, tools, etc.). Do not prepend router system on top of memory that already contains agent `system` — Yandex Qwen returns HTTP 400: `System message must be at the beginning`.
+
+**Reason:** File logs (`repl-*.log`) showed 400 on router after an agent turn (services catalog), while a fresh REPL worked; `context_chars` was ~5k, not a context-window limit.
+
+**Rejected:** Second `system` in the middle of the list; sending full memory including agent system and `tool` rows to the light router model.

@@ -30,6 +30,20 @@ route = "agent" — баланс, клиенты, счета, переводы, 
 
 Если сомневаешься или нужны инструменты/каталог — выбирай "agent"."""
 
+SIMPLE_SYSTEM = (
+    "Ты — вежливый банковский ассистент. Отвечай по-русски на общий разговор. "
+    "Не выдумывай балансы, переводы, данные клиентов и каталог услуг банка — "
+    "для фактов о банке нужен другой режим."
+)
+
+
+def _llm_messages(system_content: str, memory: SessionMemory) -> list[dict[str, Any]]:
+    """One system block at the start (Yandex prompt template requirement)."""
+    return [
+        {"role": "system", "content": system_content},
+        *memory.get_dialog_messages(),
+    ]
+
 
 def route_user_message(
     *,
@@ -38,10 +52,7 @@ def route_user_message(
     memory: SessionMemory,
 ) -> str:
     """Return 'simple' or 'agent'; default to agent on parse errors."""
-    messages: list[dict[str, Any]] = [
-        {"role": "system", "content": ROUTER_SYSTEM},
-        *memory.get_messages(),
-    ]
+    messages = _llm_messages(ROUTER_SYSTEM, memory)
     log_messages_debug("router", messages)
     log_llm_request(
         phase="router",
@@ -78,17 +89,7 @@ def run_simple_chat(
     memory: SessionMemory,
 ) -> str:
     """One completion on the router model without tools."""
-    messages: list[dict[str, Any]] = [
-        {
-            "role": "system",
-            "content": (
-                "Ты — вежливый банковский ассистент. Отвечай по-русски на общий разговор. "
-                "Не выдумывай балансы, переводы, данные клиентов и каталог услуг банка — "
-                "для фактов о банке нужен другой режим."
-            ),
-        },
-        *memory.get_messages(),
-    ]
+    messages = _llm_messages(SIMPLE_SYSTEM, memory)
     log_messages_debug("simple", messages)
     log_llm_request(
         phase="simple",

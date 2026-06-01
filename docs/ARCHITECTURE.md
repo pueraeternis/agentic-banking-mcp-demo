@@ -78,7 +78,7 @@ MCP_SERVER_MODULE=mcp_servers.banking_server
 ## Semantic router
 
 1. Append user message to shared `messages[]`.
-2. Call **router model** with a Russian system prompt: output JSON only, field `route` ∈ `simple` | `agent`.
+2. Call **router model** with a Russian system prompt: output JSON only, field `route` ∈ `simple` | `agent`. Request body: **one** `system` (router) + `user`/`assistant` dialog from memory — **not** agent `system` or `tool` rows (Yandex requires a single system block at the start).
 3. **`simple`:** one completion on router model, **no** `tools`, **no** bank service catalog. Generic chitchat only; must not invent balances, transfers, or **this bank’s** product list.
 4. **`agent`:** run **agent loop** on heavy model with `tools` built from MCP `list_tools`, and/or MCP **resource** read when answering about bank services (plan 02).
 5. **Default on parse error:** `agent`.
