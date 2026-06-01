@@ -131,7 +131,7 @@ sequenceDiagram
 | Tool | Effect |
 |------|--------|
 | `find_client` | Search by name/phone |
-| `get_account_balance` | Balance in kopecks for account or client |
+| `get_account_balance` | `balance_cents` (canonical) + `balance_rubles` / `balance_kopecks` for display |
 | `prepare_transfer` | Insert `pending` transfer, validate funds |
 | `commit_transfer` | Move funds, status `completed` |
 | `cancel_transfer` | Status `cancelled` for `pending` |

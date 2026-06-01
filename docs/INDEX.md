@@ -33,6 +33,7 @@ Navigation map for the repository. Update when files are created or roles change
 | `src/core/models.py` | Domain entities: `Client`, `Account`, `Transfer` |
 | `src/core/errors.py` | `AppError` and banking-specific errors |
 | `src/core/constants.py` | `TransferStatus`, currency `RUB` |
+| `src/core/money.py` | `balance_parts()` — kopecks → rubles + kopecks for MCP tools |
 
 ## Source — `src/operations/`
 

@@ -18,6 +18,7 @@ if str(SRC_ROOT) not in sys.path:
 from adapters.database import DatabaseSettings
 from adapters.paths import resolve_data_path
 from core.errors import AppError
+from core.money import balance_parts
 from operations import banking
 
 BANK_SERVICES_URI = "banking://services"
@@ -55,6 +56,8 @@ class BalanceResult(BaseModel):
 
     ok: bool = True
     balance_cents: int
+    balance_rubles: int
+    balance_kopecks: int
     account_id: int | None = None
     client_id: int | None = None
 
@@ -110,11 +113,12 @@ def get_account_balance(
     account_id: Annotated[int | None, Field(description="ID счёта")] = None,
     client_id: Annotated[int | None, Field(description="ID клиента (первый счёт)")] = None,
 ) -> dict[str, Any]:
-    """Получить баланс счёта в копейках (RUB)."""
+    """Получить баланс счёта: копейки (канон) + рубли и копейки для ответа пользователю."""
     try:
         balance = banking.get_account_balance(account_id=account_id, client_id=client_id)
+        parts = balance_parts(balance)
         return BalanceResult(
-            balance_cents=balance,
+            **parts,
             account_id=account_id,
             client_id=client_id,
         ).model_dump()

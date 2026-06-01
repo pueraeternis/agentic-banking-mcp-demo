@@ -12,7 +12,7 @@ uv sync
 cp .env.example .env
 # заполните YC_FOLDER_ID и YC_API_KEY
 
-# База данных
+# База данных (балансы в копейках; после смены seed — перезапустите)
 uv run python scripts/seed_db.py
 
 # REPL

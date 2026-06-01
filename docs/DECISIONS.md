@@ -97,3 +97,11 @@ Chronological journal. New entries are appended at the end.
 **Reason:** File logs (`repl-*.log`) showed 400 on router after an agent turn (services catalog), while a fresh REPL worked; `context_chars` was ~5k, not a context-window limit.
 
 **Rejected:** Second `system` in the middle of the list; sending full memory including agent system and `tool` rows to the light router model.
+
+## [2026-06-01] Balance tool: kopecks in DB, rubles/kopecks in MCP JSON
+
+**Decision:** SQLite keeps a single integer `balance_cents` (and `amount_cents` for transfers). `get_account_balance` returns `balance_cents` plus server-computed `balance_rubles` and `balance_kopecks` (0–99) via `core.money.balance_parts()`. Agent prompt: cite rubles/kopecks for user-facing text; use `balance_cents` / `amount_cents` for transfers. Demo seed aligned with tests: Ivanov `100_000` (= 1 000 ₽), Petrov `50_000`, Sidorov `25_000`.
+
+**Reason:** Seed had `10_000_000` kopecks while tests used `100_000`; the model divided correctly but showed 100 000 ₽. Pre-split fields avoid LLM arithmetic errors.
+
+**Rejected:** Separate `rubles` and `kopecks` columns in SQLite; only a formatted string without integer rubles/kopecks parts; floats for money.

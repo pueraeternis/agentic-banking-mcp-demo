@@ -50,6 +50,8 @@ def test_get_account_balance_via_mcp(mcp_client: BankingMcpClient) -> None:
     payload = parse_tool_json(raw)
     assert payload["ok"] is True
     assert payload["balance_cents"] == 100_000
+    assert payload["balance_rubles"] == 1_000
+    assert payload["balance_kopecks"] == 0
 
 
 def test_prepare_and_commit_transfer_via_mcp(mcp_client: BankingMcpClient) -> None:
