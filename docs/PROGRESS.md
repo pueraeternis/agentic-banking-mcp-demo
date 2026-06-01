@@ -1,7 +1,7 @@
 # Progress
 
-**Active plan:** _(none — plan 02 archived)_  
-**Next:** manual lecture smoke in `docs/plans/02-db-paths-and-bank-services.md`.
+**Active plan:** `docs/plans/03-file-logging.md`  
+**Goal:** Session file logging under `logs/`; Yandex API errors (`status_code`, body) in log file; rich console unchanged for lecture.
 
 ---
 

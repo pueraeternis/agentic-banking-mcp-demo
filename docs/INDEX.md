@@ -11,7 +11,8 @@ Navigation map for the repository. Update when files are created or roles change
 | `docs/DECISIONS.md` | Chronological architectural decisions |
 | `docs/PROGRESS.md` | Active plan pointer + archived wave journal |
 | `docs/plans/01-banking-agent-mcp-demo.md` | Plan 01 checklist (archived wave) |
-| `docs/plans/02-db-paths-and-bank-services.md` | **Active plan** — DB paths + MCP resource for services |
+| `docs/plans/02-db-paths-and-bank-services.md` | Plan 02 checklist (archived wave) |
+| `docs/plans/03-file-logging.md` | **Active plan** — file logging + Yandex API diagnostics |
 
 ## Entry and config
 
@@ -23,6 +24,7 @@ Navigation map for the repository. Update when files are created or roles change
 | `.env` | Local secrets (gitignored) |
 | `data/banking.db` | SQLite database (gitignored, created by seed) |
 | `data/bank_services.md` | Demo bank services catalog (plan 02; MCP resource source) |
+| `logs/` | REPL session logs (gitignored; plan 03) |
 
 ## Source — `src/core/`
 
@@ -51,6 +53,8 @@ Navigation map for the repository. Update when files are created or roles change
 | `src/adapters/router.py` | Semantic router (`simple` \| `agent`) |
 | `src/adapters/mcp_client.py` | MCP stdio subprocess client (sync facade) |
 | `src/adapters/agent_loop.py` | ReAct loop via function calling (max 8 steps) |
+| `src/adapters/logging_setup.py` | File logging for REPL session (plan 03) |
+| `src/adapters/llm_logging.py` | Yandex/OpenAI error and request helpers (plan 03) |
 
 ## Source — `src/mcp_servers/`
 

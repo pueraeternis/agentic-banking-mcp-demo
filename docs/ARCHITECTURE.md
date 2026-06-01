@@ -88,9 +88,10 @@ MCP_SERVER_MODULE=mcp_servers.banking_server
 
 - Pattern aligned with `yandex-gpt-api/examples/tools_demo.py`: `chat.completions.create(..., tools=..., tool_choice="auto")`, append assistant + `role: tool` messages, repeat.
 - **Max 8** tool rounds per invocation.
-- **Observability:** rich logs **Action** (tool name + args) and **Observation** (truncated tool result). No synthetic Thought lines.
+- **Observability (terminal):** rich **Action** (tool name + args), **Observation** (truncated tool result), **Resource** (URI). No synthetic Thought lines.
+- **Observability (file, plan 03):** per-session log under `logs/repl-{timestamp}.log` (gitignored) — route, MCP calls, agent steps; on LLM failure full Yandex `status_code` + response body (secrets redacted). Level via `LOG_LEVEL` (default `INFO`).
 - **No** LangGraph, **no** XML `<tool_call>` parsing.
-- **LLM failures:** single error surface, no retry policy.
+- **LLM failures (UX):** short user-facing message in terminal; details in log file; no retry policy.
 
 ### Agent system rules (heavy model)
 
@@ -166,6 +167,15 @@ Seed personas: **Иванов**, **Петров**, **Сидоров** (see `scri
 | `data/banking.db` | SQLite (gitignored; created by `scripts/seed_db.py`) |
 | `data/bank_services.md` | Demo bank services catalog (plan 02; versioned in git) |
 
+## Observability (plan 03)
+
+| Channel | Audience | Content |
+|---------|----------|---------|
+| Rich console | Lecture / operator | Action, Observation, Resource, `route=`, assistant reply, HITL panel |
+| `logs/repl-*.log` | Debugging / RCA | Session start, each user turn, router/agent/MCP events, Yandex API errors with body |
+
+Setup: `setup_logging()` at REPL start; `LOG_LEVEL` from env. Do not commit `logs/`. MCP subprocess stderr (FastMCP INFO) may still appear in the terminal; orchestrator MCP client events go to the file.
+
 ## Testing strategy
 
 - **Unit:** `tests/operations/` — domain rules without LLM or MCP.
@@ -175,7 +185,8 @@ Seed personas: **Иванов**, **Петров**, **Сидоров** (see `scri
 ## Related docs
 
 - Decisions log: `docs/DECISIONS.md`
-- Active plan: `docs/plans/02-db-paths-and-bank-services.md`
+- Active plan: `docs/plans/03-file-logging.md`
+- Plan 02 (archived): `docs/plans/02-db-paths-and-bank-services.md`
 - Plan 01 (archived): `docs/plans/01-banking-agent-mcp-demo.md`
 - File map: `docs/INDEX.md`
 - Status: `docs/PROGRESS.md`

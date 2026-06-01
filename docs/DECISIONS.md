@@ -81,3 +81,11 @@ Chronological journal. New entries are appended at the end.
 **Reason:** Plan 01 `simple` path produced hallucinated generic banking lists; the lecture should show MCP resources as a first-class primitive alongside tools.
 
 **Rejected:** Leaving “какие услуги у банка?” on `simple` without MCP; duplicating the same content only in system prompt without a resource; a parallel `list_bank_services` tool instead of resource (unless resource read proves insufficient in implementation).
+
+## [2026-06-01] File logging and Yandex API diagnostics
+
+**Decision:** Add **session file logging** for the REPL orchestrator: one log file per run under `logs/` (gitignored), configured centrally (e.g. `src/adapters/logging_setup.py`). **Console (rich):** unchanged for the lecture — Action/Observation/Resource, short user-facing LLM error text. **File:** full trace for root-cause analysis — each user turn, route (`simple` \| `agent`), MCP `call_tool` / `read_resource`, agent steps; on `OpenAIError` / `APIError` log **status_code**, **message**, and **response body** from Yandex plus phase (`router` \| `simple` \| `agent` step N) and model URI. Level from env `LOG_LEVEL` (default `INFO`). Do **not** log `YC_API_KEY` or `Authorization` headers; on INFO truncate large payloads (e.g. bank catalog inject: size + optional preview); full `messages[]` dump only at `DEBUG` with length cap. Optional console hint: path to the current log file after LLM errors.
+
+**Reason:** After plan 02, a long session (catalog resource + long assistant reply) caused router LLM calls to fail while a fresh REPL with the same balance question succeeded — failures were invisible because `repl.py` caught API errors without logging Yandex’s response. File logs make production-debugging possible without noisy terminals.
+
+**Rejected:** Logging only to stderr with default `logging.WARNING`; printing full API bodies to the rich console during the lecture; committing log files; separate MCP subprocess log file in v1 (orchestrator-side MCP client logging is enough); automatic retries on 429 (unchanged).
