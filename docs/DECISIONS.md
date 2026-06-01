@@ -113,3 +113,11 @@ Chronological journal. New entries are appended at the end.
 **Reason:** Long catalog answers block the terminal until the full completion returns; streaming improves lecture UX without changing MCP/HITL observability.
 
 **Rejected:** Streaming router or tool-call assembly; streaming during Action/Observation; web SSE in v1; mandatory streaming with no opt-out.
+
+## [2026-06-01] Yandex structured output vs function calling (router only)
+
+**Decision:** Align with [Yandex AI Studio](https://aistudio.yandex.ru/docs/en/ai-studio/concepts/generation/structured-output) and [function calling](https://aistudio.yandex.ru/docs/en/ai-studio/concepts/generation/function-call) as two separate mechanisms. **Agent path (implemented):** OpenAI-compatible `chat.completions` with `tools` from MCP `list_tools` only; orchestrator executes MCP (`tool_calls` → `role: tool`); model does not run tools. Keep HITL, MCP resources, streaming of final text-only steps, max 8 iterations — out of scope for Yandex-doc parity. **Router (plan 05):** API `response_format` + OpenAI-style `json_schema` (`route` enum `simple` \| `agent`) on `route_user_message`; Russian routing rules in system prompt without “JSON only” when structured output works. On `APIError` from structured call, retry once with legacy JSON-in-prompt suffix. Keep `json.loads` + default to `agent` on parse failure. Verified on `MODEL_ROUTER` via `https://ai.api.cloud.yandex.net/v1`. **Do not apply** structured `response_format` to `simple` chat or agent turns that already use `tools`. Optional later: richer `description` on MCP tool parameters (same JSON Schema story as function-calling docs).
+
+**Reason:** Function-calling pattern already matches Yandex’s orchestrator-side execution; structured output targets the one place we still rely on prompt discipline (router JSON). Demo stays on one OpenAI-compatible client — no native `ToolCallList` / second SDK unless OpenAI `response_format` fails on `MODEL_ROUTER`.
+
+**Rejected:** `response_format="json"` without schema on router (weak structure); structured output on agent alongside `tools`; migrating agent to native text-generation API (`ToolResultList`) for lecture; second LLM client stack for router only in v1.

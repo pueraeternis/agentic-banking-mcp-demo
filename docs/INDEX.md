@@ -14,6 +14,7 @@ Navigation map for the repository. Update when files are created or roles change
 | `docs/plans/02-db-paths-and-bank-services.md` | Plan 02 checklist (archived wave) |
 | `docs/plans/03-file-logging.md` | Plan 03 checklist (archived wave) |
 | `docs/plans/04-streaming-final-response.md` | Plan 04 checklist (archived wave) — stream final assistant reply |
+| `docs/plans/05-router-structured-output.md` | Plan 05 checklist (archived wave) — router `response_format` + JSON schema |
 
 ## Entry and config
 
@@ -52,7 +53,7 @@ Navigation map for the repository. Update when files are created or roles change
 | `src/adapters/llm_client.py` | OpenAI SDK client for Yandex endpoint |
 | `src/adapters/memory.py` | In-memory chat `messages[]`; `get_dialog_messages()` for router/simple |
 | `src/adapters/tool_schema.py` | MCP `list_tools` → OpenAI tools JSON |
-| `src/adapters/router.py` | Semantic router (`simple` \| `agent`) |
+| `src/adapters/router.py` | Semantic router (`simple` \| `agent`); structured `response_format` (plan 05) |
 | `src/adapters/mcp_client.py` | MCP stdio subprocess client (sync facade) |
 | `src/adapters/agent_loop.py` | ReAct loop via function calling (max 8 steps) |
 | `src/adapters/logging_setup.py` | File logging for REPL session (plan 03) |
@@ -78,6 +79,7 @@ Navigation map for the repository. Update when files are created or roles change
 | `scripts/seed_db.py` | Create schema and seed Ivanov / Petrov / Sidorov |
 | `tests/adapters/test_logging_setup.py` | File logging setup and API key redaction (plan 03) |
 | `tests/adapters/test_llm_streaming.py` | `stream_chat_text` chunk assembly (plan 04) |
+| `tests/adapters/test_router.py` | Router `response_format` + fallback (plan 05) |
 | `tests/adapters/test_paths.py` | `get_repo_root` / `resolve_data_path` (plan 02) |
 | `tests/operations/test_banking.py` | Unit tests for transfer rules (no LLM) |
 | `tests/integration/test_mcp_banking.py` | MCP stdio integration (tools + temp SQLite) |

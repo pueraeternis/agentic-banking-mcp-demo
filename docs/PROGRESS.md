@@ -1,11 +1,19 @@
 # Progress
 
-**Active plan:** none (plan 04 implemented — commit when ready)  
-**Next:** manual smoke from `docs/plans/04-streaming-final-response.md`
+**Active plan:** none (plan 05 implemented — commit when ready)  
+**Next:** manual smoke from `docs/plans/05-router-structured-output.md`
 
 ---
 
 ## Journal
+
+## Wave: docs/plans/05-router-structured-output.md — Router structured output
+
+- [x] `src/adapters/router.py` — `ROUTER_RESPONSE_SCHEMA`, `router_response_format()`, structured `route_user_message`, API fallback
+- [x] `tests/adapters/test_router.py`
+- [x] `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/INDEX.md`
+
+---
 
 ## Wave: docs/plans/04-streaming-final-response.md — Stream final assistant reply
 

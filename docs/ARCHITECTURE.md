@@ -78,7 +78,7 @@ MCP_SERVER_MODULE=mcp_servers.banking_server
 ## Semantic router
 
 1. Append user message to shared `messages[]`.
-2. Call **router model** with a Russian system prompt: output JSON only, field `route` ∈ `simple` | `agent`. Request body: **one** `system` (router) + `user`/`assistant` dialog from memory — **not** agent `system` or `tool` rows (Yandex requires a single system block at the start).
+2. Call **router model** with Russian routing rules and OpenAI-compatible `response_format` (`json_schema`, `route` enum `simple` \| `agent`); `json.loads` + default `agent` on failure. On structured-output `APIError`, one retry with JSON-in-prompt fallback (no `response_format`). Request body: **one** `system` (router) + `user`/`assistant` dialog from memory — **not** agent `system` or `tool` rows (Yandex requires a single system block at the start). Router stays **non-streamed**.
 3. **`simple`:** one completion on router model, **no** `tools`, **no** bank service catalog. Generic chitchat only; must not invent balances, transfers, or **this bank’s** product list. Final reply may be **streamed** to the terminal (plan 04).
 4. **`agent`:** run **agent loop** on heavy model with `tools` built from MCP `list_tools`, and/or MCP **resource** read when answering about bank services (plan 02). Tool rounds stay blocking (Action/Observation); **final text-only** step may be streamed (plan 04).
 5. **Default on parse error:** `agent`.
@@ -86,6 +86,7 @@ MCP_SERVER_MODULE=mcp_servers.banking_server
 
 ## Agent loop (ReAct via function calling)
 
+- Matches Yandex [function calling](https://aistudio.yandex.ru/docs/en/ai-studio/concepts/generation/function-call): model returns tool name + parameters (JSON Schema from MCP); **orchestrator** runs MCP and returns results — not the model. Wire format: OpenAI-compatible `tool_calls` / `role: tool` (not native `ToolCallList` / `ToolResultList`).
 - Pattern aligned with `yandex-gpt-api/examples/tools_demo.py`: `chat.completions.create(..., tools=..., tool_choice="auto")`, append assistant + `role: tool` messages, repeat.
 - **Max 8** tool rounds per invocation.
 - **Observability (terminal):** rich **Action** (tool name + args), **Observation** (truncated tool result), **Resource** (URI). No synthetic Thought lines.
