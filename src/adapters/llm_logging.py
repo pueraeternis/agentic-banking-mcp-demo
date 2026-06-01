@@ -119,11 +119,18 @@ def log_llm_response(
     )
 
 
+def _message_content(message: dict[str, Any] | Any) -> object | None:
+    """Read content from a dict message or an OpenAI message object."""
+    if isinstance(message, dict):
+        return message.get("content")
+    return getattr(message, "content", None)
+
+
 def messages_context_chars(messages: list[dict[str, Any]]) -> int:
     """Approximate character count of message contents for logging."""
     total = 0
     for message in messages:
-        content = message.get("content")
+        content = _message_content(message)
         if isinstance(content, str):
             total += len(content)
         elif content is not None:

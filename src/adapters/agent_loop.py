@@ -107,8 +107,9 @@ def run_agent_loop(
         )
         logger.info("Agent step %s tool_calls=%s", step, tool_names)
 
-        memory.append(response_message.model_dump(exclude_none=True))  # pyright: ignore[reportArgumentType]
-        messages.append(response_message)  # pyright: ignore[reportArgumentType]
+        assistant_turn = response_message.model_dump(exclude_none=True)
+        memory.append(assistant_turn)  # pyright: ignore[reportArgumentType]
+        messages.append(cast("ChatCompletionMessageParam", assistant_turn))
 
         for tool_call in tool_calls:
             function_name = tool_call.function.name  # pyright: ignore[reportAttributeAccessIssue]
