@@ -15,6 +15,14 @@ load_dotenv()
 YANDEX_OPENAI_BASE_URL = "https://ai.api.cloud.yandex.net/v1"
 
 
+def _env_bool(name: str, *, default: bool) -> bool:
+    """Parse env flag; false for 0, false, no, off (case-insensitive)."""
+    raw = os.getenv(name, "").strip().lower()
+    if not raw:
+        return default
+    return raw not in {"0", "false", "no", "off"}
+
+
 @dataclass(frozen=True)
 class AppConfig:
     """Runtime settings for the banking REPL demo."""
@@ -25,6 +33,7 @@ class AppConfig:
     model_agent: str
     database_path: str
     mcp_server_module: str
+    stream_final_response: bool
 
     @classmethod
     def from_env(cls) -> AppConfig:
@@ -47,6 +56,7 @@ class AppConfig:
                 "MCP_SERVER_MODULE",
                 "mcp_servers.banking_server",
             ).strip(),
+            stream_final_response=_env_bool("STREAM_FINAL_RESPONSE", default=True),
         )
 
     def model_uri(self, slug: str) -> str:

@@ -79,8 +79,8 @@ MCP_SERVER_MODULE=mcp_servers.banking_server
 
 1. Append user message to shared `messages[]`.
 2. Call **router model** with a Russian system prompt: output JSON only, field `route` ∈ `simple` | `agent`. Request body: **one** `system` (router) + `user`/`assistant` dialog from memory — **not** agent `system` or `tool` rows (Yandex requires a single system block at the start).
-3. **`simple`:** one completion on router model, **no** `tools`, **no** bank service catalog. Generic chitchat only; must not invent balances, transfers, or **this bank’s** product list.
-4. **`agent`:** run **agent loop** on heavy model with `tools` built from MCP `list_tools`, and/or MCP **resource** read when answering about bank services (plan 02).
+3. **`simple`:** one completion on router model, **no** `tools`, **no** bank service catalog. Generic chitchat only; must not invent balances, transfers, or **this bank’s** product list. Final reply may be **streamed** to the terminal (plan 04).
+4. **`agent`:** run **agent loop** on heavy model with `tools` built from MCP `list_tools`, and/or MCP **resource** read when answering about bank services (plan 02). Tool rounds stay blocking (Action/Observation); **final text-only** step may be streamed (plan 04).
 5. **Default on parse error:** `agent`.
 6. **Always `agent`:** balance queries, client lookup, transfers, any fact from DB, **questions about this demo bank’s services/products**.
 
@@ -92,6 +92,7 @@ MCP_SERVER_MODULE=mcp_servers.banking_server
 - **Observability (file, plan 03):** per-session log under `logs/repl-{timestamp}.log` (gitignored) — route, MCP calls, agent steps; on LLM failure full Yandex `status_code` + response body (secrets redacted). Level via `LOG_LEVEL` (default `INFO`).
 - **No** LangGraph, **no** XML `<tool_call>` parsing.
 - **LLM failures (UX):** short user-facing message in terminal; details in log file; no retry policy.
+- **Streaming (plan 04):** `STREAM_FINAL_RESPONSE` (default on) — `stream=True` only for user-visible assistant prose (`simple` + agent step without `tool_calls`). Router and tool calls unchanged.
 
 ### Agent system rules (heavy model)
 
@@ -171,7 +172,7 @@ Seed personas: **Иванов**, **Петров**, **Сидоров** (see `scri
 
 | Channel | Audience | Content |
 |---------|----------|---------|
-| Rich console | Lecture / operator | Action, Observation, Resource, `route=`, assistant reply, HITL panel |
+| Rich console | Lecture / operator | Action, Observation, Resource, `route=`, assistant reply (streamed when plan 04), HITL panel |
 | `logs/repl-*.log` | Debugging / RCA | Session start, each user turn, router/agent/MCP events, Yandex API errors with body |
 
 Setup: `setup_logging()` at REPL start; `LOG_LEVEL` from env. Do not commit `logs/`. MCP subprocess stderr (FastMCP INFO) may still appear in the terminal; orchestrator MCP client events go to the file.
@@ -185,6 +186,7 @@ Setup: `setup_logging()` at REPL start; `LOG_LEVEL` from env. Do not commit `log
 ## Related docs
 
 - Decisions log: `docs/DECISIONS.md`
+- Active plan: `docs/plans/04-streaming-final-response.md`
 - Plan 03 (archived): `docs/plans/03-file-logging.md`
 - Plan 02 (archived): `docs/plans/02-db-paths-and-bank-services.md`
 - Plan 01 (archived): `docs/plans/01-banking-agent-mcp-demo.md`

@@ -5,7 +5,10 @@ from __future__ import annotations
 import json
 import logging
 import sys
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 from openai import APIError, OpenAIError
 from rich.console import Console
@@ -62,6 +65,32 @@ def _log_observation(text: str) -> None:
 
 def _log_resource(uri: str) -> None:
     console.print(f"[bold blue]Resource[/bold blue] {uri}")
+
+
+class _AssistantStreamPrinter:
+    """Print assistant label once, then token deltas; finish with newline."""
+
+    def __init__(self) -> None:
+        self._started = False
+        self.streamed = False
+
+    def on_token(self, delta: str) -> None:
+        if not delta:
+            return
+        self.streamed = True
+        if not self._started:
+            console.print("[bold magenta]Ассистент:[/bold magenta] ", end="")
+            self._started = True
+        console.print(delta, end="")
+
+    def finish(self) -> None:
+        if self._started:
+            console.print()
+
+
+def _assistant_token_handler() -> tuple[Callable[[str], None], _AssistantStreamPrinter]:
+    printer = _AssistantStreamPrinter()
+    return printer.on_token, printer
 
 
 def _is_bank_services_intent(text: str) -> bool:
@@ -145,6 +174,7 @@ def _handle_hitl(
         },
     )
     llm = create_llm_client(config)
+    on_token, stream_printer = _assistant_token_handler()
     agent_result = run_agent_loop(
         client=llm,
         config=config,
@@ -153,9 +183,13 @@ def _handle_hitl(
         openai_tools=openai_tools,
         on_action=_log_action,
         on_observation=_log_observation,
+        on_token=on_token,
     )
-    if agent_result.assistant_message:
-        console.print(f"[bold magenta]Ассистент[/bold magenta]: {agent_result.assistant_message}")
+    stream_printer.finish()
+    if agent_result.assistant_message and not agent_result.streamed_to_user:
+        console.print(
+            f"[bold magenta]Ассистент[/bold magenta]: {agent_result.assistant_message}",
+        )
 
 
 def run_repl() -> None:
@@ -175,10 +209,11 @@ def run_repl() -> None:
     mcp = BankingMcpClient(config)
 
     logger.info(
-        "Session start db=%s router_model=%s agent_model=%s log_file=%s",
+        "Session start db=%s router_model=%s agent_model=%s stream_final=%s log_file=%s",
         db_path,
         config.router_model_uri,
         config.agent_model_uri,
+        config.stream_final_response,
         log_path,
     )
 
@@ -213,9 +248,17 @@ def run_repl() -> None:
 
                 if route == "simple":
                     llm_phase = "simple"
-                    reply = run_simple_chat(client=llm, config=config, memory=memory)
+                    on_token, stream_printer = _assistant_token_handler()
+                    reply, streamed = run_simple_chat(
+                        client=llm,
+                        config=config,
+                        memory=memory,
+                        on_token=on_token,
+                    )
+                    stream_printer.finish()
                     memory.append({"role": "assistant", "content": reply})
-                    console.print(f"[bold magenta]Ассистент[/bold magenta]: {reply}")
+                    if not streamed:
+                        console.print(f"[bold magenta]Ассистент[/bold magenta]: {reply}")
                     continue
 
                 llm_phase = "agent"
@@ -223,6 +266,7 @@ def run_repl() -> None:
                 if _is_bank_services_intent(user_text):
                     _inject_bank_services_context(mcp=mcp, memory=memory)
 
+                on_token, stream_printer = _assistant_token_handler()
                 agent_result = run_agent_loop(
                     client=llm,
                     config=config,
@@ -231,7 +275,9 @@ def run_repl() -> None:
                     openai_tools=openai_tools,
                     on_action=_log_action,
                     on_observation=_log_observation,
+                    on_token=on_token,
                 )
+                stream_printer.finish()
 
                 if agent_result.hitl_prepare:
                     _handle_hitl(
@@ -241,7 +287,7 @@ def run_repl() -> None:
                         config=config,
                         openai_tools=openai_tools,
                     )
-                elif agent_result.assistant_message:
+                elif agent_result.assistant_message and not agent_result.streamed_to_user:
                     console.print(
                         f"[bold magenta]Ассистент[/bold magenta]: {agent_result.assistant_message}",
                     )

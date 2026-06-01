@@ -1,11 +1,24 @@
 # Progress
 
-**Active plan:** none (plan 03 complete — commit when ready)  
-**Next:** manual smoke from `docs/plans/03-file-logging.md`
+**Active plan:** none (plan 04 implemented — commit when ready)  
+**Next:** manual smoke from `docs/plans/04-streaming-final-response.md`
 
 ---
 
 ## Journal
+
+## Wave: docs/plans/04-streaming-final-response.md — Stream final assistant reply
+
+- [x] `.env.example` — `STREAM_FINAL_RESPONSE`
+- [x] `src/adapters/config.py` — `stream_final_response`
+- [x] `src/adapters/llm_streaming.py` — `stream_chat_text`
+- [x] `src/adapters/router.py` — streaming `run_simple_chat`
+- [x] `src/adapters/agent_loop.py` — stream final text-only step; `streamed_to_user`
+- [x] `src/cli/repl.py` — `_AssistantStreamPrinter`, wire `on_token`
+- [x] `tests/adapters/test_llm_streaming.py`
+- [x] `docs/INDEX.md` — `llm_streaming.py` + test entry
+
+---
 
 ## Wave: docs/plans/03-file-logging.md — File logging + Yandex API diagnostics
 

@@ -105,3 +105,11 @@ Chronological journal. New entries are appended at the end.
 **Reason:** Seed had `10_000_000` kopecks while tests used `100_000`; the model divided correctly but showed 100 000 ₽. Pre-split fields avoid LLM arithmetic errors.
 
 **Rejected:** Separate `rubles` and `kopecks` columns in SQLite; only a formatted string without integer rubles/kopecks parts; floats for money.
+
+## [2026-06-01] Streaming final assistant reply (REPL)
+
+**Decision:** Stream **only** the user-facing assistant text via OpenAI-compatible `chat.completions.create(..., stream=True)`. Apply to: **`simple`** path (`run_simple_chat`) and **agent** path when the model returns **final text** (no `tool_calls` on that step), including max-steps fallback and post-HITL commit reply. **Do not stream:** semantic router (JSON), agent steps that emit `tool_calls`, MCP tool execution, resource read. Toggle: env `STREAM_FINAL_RESPONSE` (default `true`). Rich console: print `Ассистент:` once, then deltas; accumulate full text into `memory` as today. New helper `src/adapters/llm_streaming.py` (`stream_chat_text`).
+
+**Reason:** Long catalog answers block the terminal until the full completion returns; streaming improves lecture UX without changing MCP/HITL observability.
+
+**Rejected:** Streaming router or tool-call assembly; streaming during Action/Observation; web SSE in v1; mandatory streaming with no opt-out.
