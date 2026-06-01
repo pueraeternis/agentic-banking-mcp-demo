@@ -18,18 +18,29 @@ flowchart LR
         T3[prepare_transfer]
         T4[commit_transfer]
         T5[cancel_transfer]
+        R1[banking://services]
     end
   DB[(SQLite\ndata/banking.db)]
+  SVC[data/bank_services.md]
 
     User --> CLI
     RTR -->|simple| LLM1[Yandex OpenAI API]
     RTR -->|agent| AGT
+    RTR -->|bank services| AGT
     AGT --> LLM2[Yandex OpenAI API]
     AGT --> MCP
+    CLI -->|resources/read| MCP
     HITL --> MCP
     MCP --> OPS[operations/banking.py]
     OPS --> DB
+    R1 --> SVC
 ```
+
+## Repository paths (plan 02)
+
+- **Repository root:** directory with `pyproject.toml` / `main.py` (not `src/`, not `data/`).
+- **Resolution:** `DATABASE_PATH` and files under `data/` are normalized to absolute paths as `repo_root / <relative>` before SQLite or MCP env.
+- **MCP subprocess:** `cwd=repo_root`, `PYTHONPATH=repo_root/src`, `DATABASE_PATH` absolute — so `data/banking.db` is the same file the REPL checks, regardless of shell cwd.
 
 ## Layers (onion)
 
@@ -68,10 +79,10 @@ MCP_SERVER_MODULE=mcp_servers.banking_server
 
 1. Append user message to shared `messages[]`.
 2. Call **router model** with a Russian system prompt: output JSON only, field `route` ∈ `simple` | `agent`.
-3. **`simple`:** one completion on router model, **no** `tools`. General FAQ; must not invent balances or execute transfers.
-4. **`agent`:** run **agent loop** on heavy model with `tools` built from MCP `list_tools`.
+3. **`simple`:** one completion on router model, **no** `tools`, **no** bank service catalog. Generic chitchat only; must not invent balances, transfers, or **this bank’s** product list.
+4. **`agent`:** run **agent loop** on heavy model with `tools` built from MCP `list_tools`, and/or MCP **resource** read when answering about bank services (plan 02).
 5. **Default on parse error:** `agent`.
-6. **Always `agent`:** balance queries, client lookup, transfers, any fact from DB.
+6. **Always `agent`:** balance queries, client lookup, transfers, any fact from DB, **questions about this demo bank’s services/products**.
 
 ## Agent loop (ReAct via function calling)
 
@@ -126,6 +137,20 @@ sequenceDiagram
 
 Tool JSON schemas for the LLM are **only** produced from MCP `list_tools` (converted to OpenAI `tools` format).
 
+## MCP resources (plan 02)
+
+| URI | Source | Usage |
+|-----|--------|--------|
+| `banking://services` | `data/bank_services.md` | Catalog of demo bank products/services (Russian) |
+
+Flow for “Какие услуги у банка?”:
+
+1. Router → `agent` (not `simple`).
+2. REPL calls MCP `resources/read` for `banking://services`.
+3. Content injected into session context; heavy model answers from that text (rich may show **Resource** line).
+
+**Rejected for services:** `simple` path without MCP (generic LLM essay about “any bank”).
+
 ## Data model (SQLite)
 
 - **`clients`** — `id`, `full_name`, `phone`
@@ -134,14 +159,23 @@ Tool JSON schemas for the LLM are **only** produced from MCP `list_tools` (conve
 
 Seed personas: **Иванов**, **Петров**, **Сидоров** (see `scripts/seed_db.py` in plan).
 
+## Static data files (`data/`)
+
+| File | Role |
+|------|------|
+| `data/banking.db` | SQLite (gitignored; created by `scripts/seed_db.py`) |
+| `data/bank_services.md` | Demo bank services catalog (plan 02; versioned in git) |
+
 ## Testing strategy
 
 - **Unit:** `tests/operations/` — domain rules without LLM or MCP.
-- **Manual:** lecture smoke script in `docs/plans/01-banking-agent-mcp-demo.md`.
+- **Integration:** `tests/integration/` — MCP tools + resources (plan 02), temp DB with absolute path.
+- **Manual:** lecture smoke in active plan `docs/plans/02-db-paths-and-bank-services.md` (supersedes plan 01 item for services).
 
 ## Related docs
 
 - Decisions log: `docs/DECISIONS.md`
-- Implementation checklist: `docs/plans/01-banking-agent-mcp-demo.md`
+- Active plan: `docs/plans/02-db-paths-and-bank-services.md`
+- Plan 01 (archived): `docs/plans/01-banking-agent-mcp-demo.md`
 - File map: `docs/INDEX.md`
 - Status: `docs/PROGRESS.md`

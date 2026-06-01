@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import logging
 import sys
-from pathlib import Path
 from typing import Any
 
 from openai import APIError, OpenAIError
@@ -18,6 +17,7 @@ from adapters.database import DatabaseSettings
 from adapters.llm_client import create_llm_client
 from adapters.mcp_client import BankingMcpClient
 from adapters.memory import SessionMemory
+from adapters.paths import resolve_data_path
 from adapters.router import route_user_message, run_simple_chat
 from adapters.tool_schema import mcp_tools_to_openai
 
@@ -25,6 +25,23 @@ logger = logging.getLogger(__name__)
 console = Console()
 
 LLM_ERROR_MESSAGE = "Не удалось обратиться к модели Yandex. Проверьте ключ и квоту."
+
+BANK_SERVICES_URI = "banking://services"
+
+_SERVICE_KEYWORDS = (
+    "услуг",
+    "продукт",
+    "продукты",
+    "карт",
+    "вклад",
+    "кредит",
+    "тариф",
+    "пакет",
+    "обслуживан",
+    "что предлагает",
+    "что умеет",
+    "каталог",
+)
 
 
 def _truncate(text: str, limit: int = 500) -> str:
@@ -39,6 +56,31 @@ def _log_action(name: str, args: dict[str, Any]) -> None:
 
 def _log_observation(text: str) -> None:
     console.print(f"[bold green]Observation[/bold green] {_truncate(text)}")
+
+
+def _log_resource(uri: str) -> None:
+    console.print(f"[bold blue]Resource[/bold blue] {uri}")
+
+
+def _is_bank_services_intent(text: str) -> bool:
+    lower = text.lower()
+    return any(keyword in lower for keyword in _SERVICE_KEYWORDS)
+
+
+def _inject_bank_services_context(*, mcp: BankingMcpClient, memory: SessionMemory) -> None:
+    services_text = mcp.read_resource(BANK_SERVICES_URI)
+    _log_resource(BANK_SERVICES_URI)
+    memory.append(
+        {
+            "role": "user",
+            "content": (
+                "Контекст: официальный каталог услуг и продуктов нашего банка "
+                f"(MCP resource {BANK_SERVICES_URI}):\n\n"
+                f"{services_text}\n\n"
+                "Ответь на последний вопрос пользователя, опираясь только на этот каталог."
+            ),
+        },
+    )
 
 
 def _show_hitl_panel(prepare_payload: dict[str, Any]) -> None:
@@ -112,9 +154,8 @@ def run_repl() -> None:
     """Main REPL loop."""
     logging.basicConfig(level=logging.WARNING)
     config = AppConfig.from_env()
-    DatabaseSettings.path = config.database_path
-
-    db_path = Path(config.database_path)
+    db_path = resolve_data_path(config.database_path)
+    DatabaseSettings.path = str(db_path)
     if not db_path.is_file():
         console.print(
             f"[red]База {db_path} не найдена.[/red] Выполните: [bold]uv run python scripts/seed_db.py[/bold]",
@@ -155,6 +196,9 @@ def run_repl() -> None:
                     memory.append({"role": "assistant", "content": reply})
                     console.print(f"[bold magenta]Ассистент[/bold magenta]: {reply}")
                     continue
+
+                if _is_bank_services_intent(user_text):
+                    _inject_bank_services_context(mcp=mcp, memory=memory)
 
                 agent_result = run_agent_loop(
                     client=llm,

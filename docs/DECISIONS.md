@@ -65,3 +65,19 @@ Chronological journal. New entries are appended at the end.
 **Reason:** Single runnable demo for the webinar; domain tests give confidence without flaky API calls.
 
 **Rejected:** Feature-flagged partial modes; git tags per wave as the primary delivery mechanism; skipping unit tests.
+
+## [2026-06-01] Repository root and database paths
+
+**Decision:** **Repository root** is the project directory that contains `pyproject.toml` and `main.py` (not `src/`, not `data/`). Any relative path from config (e.g. `DATABASE_PATH=data/banking.db`) is normalized once to an **absolute** path: `repo_root / relative_path`. MCP stdio subprocess: `cwd=repo_root`, `PYTHONPATH=repo_root/src`, env `DATABASE_PATH=<absolute>`. Fix incorrect root detection in `mcp_client` (was one level too shallow → `cwd` pointed at `src/`, so SQLite looked for `src/data/banking.db`).
+
+**Reason:** REPL preflight used the shell’s cwd and found `data/banking.db`; MCP subprocess used a wrong working directory with the same relative string → `unable to open database file`. Integration tests passed because they pass an absolute temp DB path.
+
+**Rejected:** Treating `src/` or `data/` as the repository root; passing relative `DATABASE_PATH` into MCP without resolving against `repo_root`; depending on the user’s terminal cwd for DB access.
+
+## [2026-06-01] Bank services catalog (MCP resource)
+
+**Decision:** Demo bank services live in a versioned file `data/bank_services.md` (Russian, fixed catalog for the lecture). Expose it as an MCP **resource** `banking://services` (FastMCP resource handler reads the file via `repo_root`). Router: questions about **this bank’s** services/products → `route=agent` (not `simple`). Orchestrator calls MCP `resources/read` for that URI and injects the text into the session before the heavy model answers (no invented generic “any bank” FAQ). Extend `mcp_client` with `read_resource`; observability may log **Resource** read in rich output.
+
+**Reason:** Plan 01 `simple` path produced hallucinated generic banking lists; the lecture should show MCP resources as a first-class primitive alongside tools.
+
+**Rejected:** Leaving “какие услуги у банка?” on `simple` without MCP; duplicating the same content only in system prompt without a resource; a parallel `list_bank_services` tool instead of resource (unless resource read proves insufficient in implementation).

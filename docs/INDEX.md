@@ -10,7 +10,8 @@ Navigation map for the repository. Update when files are created or roles change
 | `docs/ARCHITECTURE.md` | Runtime design, flows, MCP/HITL/router |
 | `docs/DECISIONS.md` | Chronological architectural decisions |
 | `docs/PROGRESS.md` | Active plan pointer + archived wave journal |
-| `docs/plans/01-banking-agent-mcp-demo.md` | Implementation checklist (plan 01) |
+| `docs/plans/01-banking-agent-mcp-demo.md` | Plan 01 checklist (archived wave) |
+| `docs/plans/02-db-paths-and-bank-services.md` | **Active plan** — DB paths + MCP resource for services |
 
 ## Entry and config
 
@@ -21,6 +22,7 @@ Navigation map for the repository. Update when files are created or roles change
 | `.env.example` | Template for Yandex API and model slugs |
 | `.env` | Local secrets (gitignored) |
 | `data/banking.db` | SQLite database (gitignored, created by seed) |
+| `data/bank_services.md` | Demo bank services catalog (plan 02; MCP resource source) |
 
 ## Source — `src/core/`
 
@@ -41,6 +43,7 @@ Navigation map for the repository. Update when files are created or roles change
 | Path | Purpose |
 |------|---------|
 | `src/adapters/config.py` | `AppConfig.from_env()`, model URIs |
+| `src/adapters/paths.py` | `get_repo_root()`, `resolve_data_path()` (plan 02) |
 | `src/adapters/database.py` | SQLite path holder and `get_connection()` |
 | `src/adapters/llm_client.py` | OpenAI SDK client for Yandex endpoint |
 | `src/adapters/memory.py` | In-memory chat `messages[]` per session |
@@ -53,7 +56,7 @@ Navigation map for the repository. Update when files are created or roles change
 
 | Path | Purpose |
 |------|---------|
-| `src/mcp_servers/banking_server.py` | FastMCP server; five banking tools → `operations/` |
+| `src/mcp_servers/banking_server.py` | FastMCP server; five tools + resource `banking://services` (plan 02) |
 
 ## Source — `src/cli/`
 

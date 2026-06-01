@@ -48,7 +48,7 @@
 ## 5. Documentation sync (post-implementation)
 
 - [x] Update `docs/INDEX.md` with actual file purposes
-- [ ] Archive wave in `docs/PROGRESS.md` after commit; set next active plan or `none`
+- [x] Archive wave in `docs/PROGRESS.md` after commit; set next active plan or `none`
 
 ## 6. Cursor rules cleanup
 

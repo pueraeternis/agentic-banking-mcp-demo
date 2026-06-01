@@ -12,6 +12,22 @@ if TYPE_CHECKING:
 
 pytestmark = pytest.mark.integration
 
+BANK_SERVICES_URI = "banking://services"
+
+
+def test_list_resources_includes_bank_services(mcp_client: BankingMcpClient) -> None:
+    """MCP resources/list exposes the bank services catalog."""
+    uris = {str(resource.uri) for resource in mcp_client.list_resources()}
+    assert BANK_SERVICES_URI in uris
+
+
+def test_read_bank_services_resource_returns_markdown(mcp_client: BankingMcpClient) -> None:
+    """read_resource returns non-empty markdown from data/bank_services.md."""
+    text = mcp_client.read_resource(BANK_SERVICES_URI)
+    assert "Услуги демо-банка" in text
+    assert "Вклады" in text
+    assert len(text.strip()) > 100
+
 
 def test_list_tools_exposes_five_banking_tools(mcp_client: BankingMcpClient) -> None:
     """MCP tools/list matches the v1 banking tool set."""

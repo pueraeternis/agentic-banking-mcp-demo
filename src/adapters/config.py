@@ -8,6 +8,8 @@ from dataclasses import dataclass
 
 from dotenv import load_dotenv
 
+from adapters.paths import resolve_data_path
+
 load_dotenv()
 
 YANDEX_OPENAI_BASE_URL = "https://ai.api.cloud.yandex.net/v1"
@@ -38,7 +40,9 @@ class AppConfig:
             api_key=api_key,
             model_router=os.getenv("MODEL_ROUTER", "qwen3.5-35b-a3b-fp8").strip(),
             model_agent=os.getenv("MODEL_AGENT", "qwen3-235b-a22b-fp8").strip(),
-            database_path=os.getenv("DATABASE_PATH", "data/banking.db").strip(),
+            database_path=str(
+                resolve_data_path(os.getenv("DATABASE_PATH", "data/banking.db").strip()),
+            ),
             mcp_server_module=os.getenv(
                 "MCP_SERVER_MODULE",
                 "mcp_servers.banking_server",

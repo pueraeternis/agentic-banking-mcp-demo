@@ -147,8 +147,9 @@ activemq-data/
 # SageMath parsed files
 *.sage.py
 
-# Demo data
-data/
+# Demo data (SQLite gitignored; catalog versioned)
+data/*
+!data/bank_services.md
 
 # Environments
 .env

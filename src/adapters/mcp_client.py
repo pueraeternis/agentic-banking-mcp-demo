@@ -9,18 +9,28 @@ import os
 import sys
 import threading
 from contextlib import AsyncExitStack
-from pathlib import Path
 from typing import Any
 
 from mcp import ClientSession, StdioServerParameters, types
 from mcp.client.stdio import get_default_environment, stdio_client
+from pydantic import AnyUrl
 
 from adapters.config import AppConfig
+from adapters.paths import get_repo_root
 
 logger = logging.getLogger(__name__)
 
-_SRC_DIR = Path(__file__).resolve().parent
-_PROJECT_ROOT = _SRC_DIR.parent
+_REPO_ROOT = get_repo_root()
+_SRC_ROOT = _REPO_ROOT / "src"
+
+
+def read_resource_result_to_text(result: types.ReadResourceResult) -> str:
+    """Serialize MCP resource read result to plain text."""
+    parts: list[str] = []
+    for block in result.contents:
+        if isinstance(block, types.TextResourceContents):
+            parts.append(block.text)
+    return "\n".join(parts)
 
 
 def call_tool_result_to_text(result: types.CallToolResult) -> str:
@@ -85,11 +95,37 @@ class BankingMcpClient:
         result = asyncio.run_coroutine_threadsafe(_call(), self._loop).result(timeout=60)
         return call_tool_result_to_text(result)
 
+    def list_resources(self) -> list[types.Resource]:
+        """Return resources advertised by the MCP server."""
+        if self._loop is None or self._session is None:
+            msg = "MCP client is not connected"
+            raise RuntimeError(msg)
+
+        async def _list() -> list[types.Resource]:
+            assert self._session is not None
+            listed = await self._session.list_resources()
+            return list(listed.resources)
+
+        return asyncio.run_coroutine_threadsafe(_list(), self._loop).result(timeout=60)
+
+    def read_resource(self, uri: str) -> str:
+        """Read an MCP resource by URI and return its text content."""
+        if self._loop is None or self._session is None:
+            msg = "MCP client is not connected"
+            raise RuntimeError(msg)
+
+        async def _read() -> types.ReadResourceResult:
+            assert self._session is not None
+            return await self._session.read_resource(AnyUrl(uri))
+
+        result = asyncio.run_coroutine_threadsafe(_read(), self._loop).result(timeout=60)
+        return read_resource_result_to_text(result)
+
     def _thread_main(self) -> None:
         self._loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._loop)
         pythonpath = os.pathsep.join(
-            [str(_SRC_DIR), os.environ.get("PYTHONPATH", "")],
+            [str(_SRC_ROOT), os.environ.get("PYTHONPATH", "")],
         ).strip(os.pathsep)
         try:
             self._loop.run_until_complete(self._run_session(pythonpath))
@@ -103,7 +139,7 @@ class BankingMcpClient:
         server_params = StdioServerParameters(
             command=sys.executable,
             args=["-m", self._config.mcp_server_module],
-            cwd=str(_PROJECT_ROOT),
+            cwd=str(_REPO_ROOT),
             env={
                 **get_default_environment(),
                 "PYTHONPATH": pythonpath,

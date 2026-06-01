@@ -16,8 +16,11 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from adapters.database import DatabaseSettings
+from adapters.paths import resolve_data_path
 from core.errors import AppError
 from operations import banking
+
+BANK_SERVICES_URI = "banking://services"
 
 load_dotenv()
 
@@ -69,13 +72,23 @@ class TransferResult(BaseModel):
 
 
 def _configure_db() -> None:
-    DatabaseSettings.path = os.getenv("DATABASE_PATH", DatabaseSettings.path)
+    """Apply DATABASE_PATH from env (always absolute when spawned from REPL/tests)."""
+    env_path = os.getenv("DATABASE_PATH")
+    if env_path:
+        DatabaseSettings.path = str(resolve_data_path(env_path))
 
 
 def _error_payload(exc: Exception) -> dict[str, Any]:
     if isinstance(exc, AppError):
         return ToolErrorPayload(code=exc.code, message=exc.message).model_dump()
     return ToolErrorPayload(code="INTERNAL_ERROR", message=str(exc)).model_dump()
+
+
+@mcp.resource(BANK_SERVICES_URI, mime_type="text/markdown", name="bank_services")
+def bank_services_catalog() -> str:
+    """Каталог услуг и продуктов демо-банка."""
+    path = resolve_data_path("data/bank_services.md")
+    return path.read_text(encoding="utf-8")
 
 
 @mcp.tool()
