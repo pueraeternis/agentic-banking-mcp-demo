@@ -12,7 +12,7 @@ Navigation map for the repository. Update when files are created or roles change
 | `docs/PROGRESS.md` | Active plan pointer + archived wave journal |
 | `docs/plans/01-banking-agent-mcp-demo.md` | Plan 01 checklist (archived wave) |
 | `docs/plans/02-db-paths-and-bank-services.md` | Plan 02 checklist (archived wave) |
-| `docs/plans/03-file-logging.md` | **Active plan** — file logging + Yandex API diagnostics |
+| `docs/plans/03-file-logging.md` | Plan 03 checklist (archived wave) |
 
 ## Entry and config
 
@@ -73,6 +73,8 @@ Navigation map for the repository. Update when files are created or roles change
 | Path | Purpose |
 |------|---------|
 | `scripts/seed_db.py` | Create schema and seed Ivanov / Petrov / Sidorov |
+| `tests/adapters/test_logging_setup.py` | File logging setup and API key redaction (plan 03) |
+| `tests/adapters/test_paths.py` | `get_repo_root` / `resolve_data_path` (plan 02) |
 | `tests/operations/test_banking.py` | Unit tests for transfer rules (no LLM) |
 | `tests/integration/test_mcp_banking.py` | MCP stdio integration (tools + temp SQLite) |
 | `tests/integration/conftest.py` | MCP test fixtures and DB seed helper |

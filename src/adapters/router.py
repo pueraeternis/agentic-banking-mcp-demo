@@ -9,6 +9,12 @@ from typing import Any
 from openai import OpenAI
 
 from adapters.config import AppConfig
+from adapters.llm_logging import (
+    log_llm_request,
+    log_llm_response,
+    log_messages_debug,
+    messages_context_chars,
+)
 from adapters.memory import SessionMemory
 
 logger = logging.getLogger(__name__)
@@ -36,6 +42,13 @@ def route_user_message(
         {"role": "system", "content": ROUTER_SYSTEM},
         *memory.get_messages(),
     ]
+    log_messages_debug("router", messages)
+    log_llm_request(
+        phase="router",
+        model=config.router_model_uri,
+        message_count=len(messages),
+        context_chars=messages_context_chars(messages),
+    )
     try:
         response = client.chat.completions.create(
             model=config.router_model_uri,
@@ -43,6 +56,12 @@ def route_user_message(
             temperature=0.0,
         )
         content = (response.choices[0].message.content or "").strip()
+        log_llm_response(
+            phase="router",
+            model=config.router_model_uri,
+            usage=response.usage,
+            content_len=len(content),
+        )
         data = json.loads(content)
         route = str(data.get("route", "agent")).lower()
         if route in {"simple", "agent"}:
@@ -70,9 +89,23 @@ def run_simple_chat(
         },
         *memory.get_messages(),
     ]
+    log_messages_debug("simple", messages)
+    log_llm_request(
+        phase="simple",
+        model=config.router_model_uri,
+        message_count=len(messages),
+        context_chars=messages_context_chars(messages),
+    )
     response = client.chat.completions.create(
         model=config.router_model_uri,
         messages=messages,  # type: ignore[arg-type]
         temperature=0.3,
     )
-    return response.choices[0].message.content or ""
+    content = response.choices[0].message.content or ""
+    log_llm_response(
+        phase="simple",
+        model=config.router_model_uri,
+        usage=response.usage,
+        content_len=len(content),
+    )
+    return content

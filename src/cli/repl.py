@@ -15,6 +15,8 @@ from adapters.agent_loop import run_agent_loop
 from adapters.config import AppConfig
 from adapters.database import DatabaseSettings
 from adapters.llm_client import create_llm_client
+from adapters.llm_logging import log_llm_error, truncate_for_log
+from adapters.logging_setup import get_session_log_path, setup_logging
 from adapters.mcp_client import BankingMcpClient
 from adapters.memory import SessionMemory
 from adapters.paths import resolve_data_path
@@ -70,6 +72,12 @@ def _is_bank_services_intent(text: str) -> bool:
 def _inject_bank_services_context(*, mcp: BankingMcpClient, memory: SessionMemory) -> None:
     services_text = mcp.read_resource(BANK_SERVICES_URI)
     _log_resource(BANK_SERVICES_URI)
+    logger.info(
+        "Resource inject uri=%s chars=%s preview=%s",
+        BANK_SERVICES_URI,
+        len(services_text),
+        truncate_for_log(services_text, 120),
+    )
     memory.append(
         {
             "role": "user",
@@ -152,7 +160,7 @@ def _handle_hitl(
 
 def run_repl() -> None:
     """Main REPL loop."""
-    logging.basicConfig(level=logging.WARNING)
+    log_path = setup_logging()
     config = AppConfig.from_env()
     db_path = resolve_data_path(config.database_path)
     DatabaseSettings.path = str(db_path)
@@ -165,6 +173,14 @@ def run_repl() -> None:
     llm = create_llm_client(config)
     memory = SessionMemory()
     mcp = BankingMcpClient(config)
+
+    logger.info(
+        "Session start db=%s router_model=%s agent_model=%s log_file=%s",
+        db_path,
+        config.router_model_uri,
+        config.agent_model_uri,
+        log_path,
+    )
 
     console.print(
         Panel(
@@ -186,17 +202,24 @@ def run_repl() -> None:
             if user_text.lower() in {"exit", "quit", "выход"}:
                 break
 
+            llm_phase = "router"
+            llm_model = config.router_model_uri
             try:
+                logger.info("User turn: %s", truncate_for_log(user_text, 300))
                 memory.append({"role": "user", "content": user_text})
                 route = route_user_message(client=llm, config=config, memory=memory)
                 console.print(f"[dim]route={route}[/dim]")
+                logger.info("route=%s", route)
 
                 if route == "simple":
+                    llm_phase = "simple"
                     reply = run_simple_chat(client=llm, config=config, memory=memory)
                     memory.append({"role": "assistant", "content": reply})
                     console.print(f"[bold magenta]Ассистент[/bold magenta]: {reply}")
                     continue
 
+                llm_phase = "agent"
+                llm_model = config.agent_model_uri
                 if _is_bank_services_intent(user_text):
                     _inject_bank_services_context(mcp=mcp, memory=memory)
 
@@ -222,8 +245,12 @@ def run_repl() -> None:
                     console.print(
                         f"[bold magenta]Ассистент[/bold magenta]: {agent_result.assistant_message}",
                     )
-            except (OpenAIError, APIError):
+            except (OpenAIError, APIError) as exc:
+                log_llm_error(exc, phase=llm_phase, model=llm_model)
                 console.print(f"[red]{LLM_ERROR_MESSAGE}[/red]")
+                session_log = get_session_log_path()
+                if session_log is not None:
+                    console.print(f"[dim]Подробности: {session_log}[/dim]")
                 last = memory.pop_last()
                 if last and last.get("role") != "user":
                     memory.append(last)

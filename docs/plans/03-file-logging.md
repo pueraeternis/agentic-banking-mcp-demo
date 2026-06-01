@@ -18,38 +18,38 @@
 
 ## 1. Log directory and setup
 
-- [ ] `.gitignore` — `logs/` (entire directory)
-- [ ] `src/adapters/logging_setup.py` — `setup_logging() -> Path`:
+- [x] `.gitignore` — `logs/` (entire directory)
+- [x] `src/adapters/logging_setup.py` — `setup_logging() -> Path`:
   - resolve `logs/` under `repo_root` (`get_repo_root()`)
   - create dir if missing
   - filename `repl-{timestamp}.log` (local time, safe for filesystem)
   - `logging.basicConfig` or root logger: **FileHandler** (UTF-8), format `%(asctime)s %(levelname)s %(name)s %(message)s`
   - level from `LOG_LEVEL` env (`INFO` default); invalid value → `INFO` + warning in log
   - do not add a second console handler (rich stays the UI)
-- [ ] `src/adapters/llm_logging.py` (or helpers in `logging_setup.py`) — `log_llm_error(exc, *, phase, model)`, `log_llm_request(phase, model, message_count, context_chars)`, `log_llm_response(phase, model, usage, content_len)`; redact secrets; truncate text helpers
+- [x] `src/adapters/llm_logging.py` (or helpers in `logging_setup.py`) — `log_llm_error(exc, *, phase, model)`, `log_llm_request(phase, model, message_count, context_chars)`, `log_llm_response(phase, model, usage, content_len)`; redact secrets; truncate text helpers
 
 ## 2. Instrument orchestrator
 
-- [ ] `src/cli/repl.py` — call `setup_logging()` at start; log session start (db path, models, log file path); log each user turn; on `(OpenAIError, APIError)` call `log_llm_error` + optional dim hint with log path (keep user message short)
-- [ ] `src/adapters/router.py` — log before/after router and simple chat completions; log parse fallback to `agent`
-- [ ] `src/adapters/agent_loop.py` — log each agent step (model, tool names or final text length); log max-steps warning (already exists, ensure file receives it)
-- [ ] `src/adapters/mcp_client.py` — log connect/close, `call_tool`, `read_resource`, `list_resources` (uri/name, arg keys; observation truncated e.g. 500 chars on INFO)
-- [ ] `src/cli/repl.py` — log resource inject: uri + catalog byte/char size (not full catalog on INFO)
+- [x] `src/cli/repl.py` — call `setup_logging()` at start; log session start (db path, models, log file path); log each user turn; on `(OpenAIError, APIError)` call `log_llm_error` + optional dim hint with log path (keep user message short)
+- [x] `src/adapters/router.py` — log before/after router and simple chat completions; log parse fallback to `agent`
+- [x] `src/adapters/agent_loop.py` — log each agent step (model, tool names or final text length); log max-steps warning (already exists, ensure file receives it)
+- [x] `src/adapters/mcp_client.py` — log connect/close, `call_tool`, `read_resource`, `list_resources` (uri/name, arg keys; observation truncated e.g. 500 chars on INFO)
+- [x] `src/cli/repl.py` — log resource inject: uri + catalog byte/char size (not full catalog on INFO)
 
 ## 3. Config and examples
 
-- [ ] `.env.example` — `LOG_LEVEL=INFO` with one-line comment
-- [ ] `README.md` — short note: logs in `logs/`, gitignored, raise `LOG_LEVEL=DEBUG` for verbose LLM context
+- [x] `.env.example` — `LOG_LEVEL=INFO` with one-line comment
+- [x] `README.md` — short note: logs in `logs/`, gitignored, raise `LOG_LEVEL=DEBUG` for verbose LLM context
 
 ## 4. Tests
 
-- [ ] `tests/adapters/test_logging_setup.py` — `setup_logging()` creates file under tmp repo layout or tmp_path; handler attached; no API key in formatted output from `log_llm_error` fixture
+- [x] `tests/adapters/test_logging_setup.py` — `setup_logging()` creates file under tmp repo layout or tmp_path; handler attached; no API key in formatted output from `log_llm_error` fixture
 - [ ] Manual smoke: force or simulate LLM error → file contains `status_code` / body snippet
 
 ## 5. Documentation sync (post-implementation)
 
-- [ ] Update `docs/INDEX.md` — `logging_setup.py`, `llm_logging.py`, `logs/`
-- [ ] Archive wave in `docs/PROGRESS.md` after commit
+- [x] Update `docs/INDEX.md` — `logging_setup.py`, `llm_logging.py`, `logs/`
+- [x] Archive wave in `docs/PROGRESS.md` after commit
 
 ---
 

@@ -11,6 +11,12 @@ from typing import TYPE_CHECKING, Any, cast
 from openai import OpenAI
 
 from adapters.config import AppConfig
+from adapters.llm_logging import (
+    log_llm_request,
+    log_llm_response,
+    log_messages_debug,
+    messages_context_chars,
+)
 from adapters.mcp_client import BankingMcpClient
 from adapters.memory import SessionMemory
 
@@ -56,7 +62,16 @@ def run_agent_loop(
     messages = cast("list[ChatCompletionMessageParam]", memory.get_messages())
     tools = cast("list[ChatCompletionToolUnionParam]", openai_tools)
 
-    for _step in range(MAX_AGENT_STEPS):
+    for step in range(1, MAX_AGENT_STEPS + 1):
+        phase = f"agent step {step}"
+        msg_list = cast("list[dict[str, Any]]", messages)
+        log_messages_debug(phase, msg_list)
+        log_llm_request(
+            phase=phase,
+            model=config.agent_model_uri,
+            message_count=len(messages),
+            context_chars=messages_context_chars(msg_list),
+        )
         response = client.chat.completions.create(
             model=config.agent_model_uri,
             messages=messages,
@@ -69,9 +84,28 @@ def run_agent_loop(
 
         if not tool_calls:
             text = response_message.content or ""
+            log_llm_response(
+                phase=phase,
+                model=config.agent_model_uri,
+                usage=response.usage,
+                content_len=len(text),
+            )
+            logger.info("Agent step %s finished with text len=%s", step, len(text))
             memory.append({"role": "assistant", "content": text})
             messages.append({"role": "assistant", "content": text})
             return AgentLoopResult(assistant_message=text, hitl_prepare=hitl_prepare)
+
+        tool_names = [
+            tc.function.name  # pyright: ignore[reportAttributeAccessIssue]
+            for tc in tool_calls
+        ]
+        log_llm_response(
+            phase=phase,
+            model=config.agent_model_uri,
+            usage=response.usage,
+            content_len=len(response_message.content or ""),
+        )
+        logger.info("Agent step %s tool_calls=%s", step, tool_names)
 
         memory.append(response_message.model_dump(exclude_none=True))  # pyright: ignore[reportArgumentType]
         messages.append(response_message)  # pyright: ignore[reportArgumentType]

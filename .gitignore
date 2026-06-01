@@ -151,6 +151,9 @@ activemq-data/
 data/*
 !data/bank_services.md
 
+# REPL session logs (plan 03)
+logs/
+
 # Environments
 .env
 .envrc

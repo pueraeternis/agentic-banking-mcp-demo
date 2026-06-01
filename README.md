@@ -19,6 +19,8 @@ uv run python scripts/seed_db.py
 uv run python main.py
 ```
 
+Сессионные логи пишутся в `logs/repl-*.log` (каталог в `.gitignore`). При ошибках Yandex API подробности — в файле; в терминале остаётся короткое сообщение. Для развёрнутого контекста LLM задайте `LOG_LEVEL=DEBUG` в `.env`.
+
 ## Документация
 
 | Документ | Описание |
@@ -27,6 +29,7 @@ uv run python main.py
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Архитектура и потоки |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Принятые решения |
 | [docs/PROGRESS.md](docs/PROGRESS.md) | Активный план и журнал волн |
+| [docs/plans/03-file-logging.md](docs/plans/03-file-logging.md) | Активный план (file logging) |
 | [docs/plans/01-banking-agent-mcp-demo.md](docs/plans/01-banking-agent-mcp-demo.md) | План реализации (plan 01) |
 
 ## Тесты

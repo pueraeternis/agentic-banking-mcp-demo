@@ -185,7 +185,7 @@ Setup: `setup_logging()` at REPL start; `LOG_LEVEL` from env. Do not commit `log
 ## Related docs
 
 - Decisions log: `docs/DECISIONS.md`
-- Active plan: `docs/plans/03-file-logging.md`
+- Plan 03 (archived): `docs/plans/03-file-logging.md`
 - Plan 02 (archived): `docs/plans/02-db-paths-and-bank-services.md`
 - Plan 01 (archived): `docs/plans/01-banking-agent-mcp-demo.md`
 - File map: `docs/INDEX.md`

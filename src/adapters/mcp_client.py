@@ -16,6 +16,7 @@ from mcp.client.stdio import get_default_environment, stdio_client
 from pydantic import AnyUrl
 
 from adapters.config import AppConfig
+from adapters.llm_logging import truncate_for_log
 from adapters.paths import get_repo_root
 
 logger = logging.getLogger(__name__)
@@ -60,16 +61,24 @@ class BankingMcpClient:
 
     def connect(self) -> None:
         """Start MCP server subprocess and initialize the session."""
+        logger.info(
+            "MCP connect module=%s cwd=%s database_path=%s",
+            self._config.mcp_server_module,
+            _REPO_ROOT,
+            self._config.database_path,
+        )
         self._thread = threading.Thread(target=self._thread_main, name="mcp-client", daemon=True)
         self._thread.start()
         if not self._ready.wait(timeout=30):
             msg = "MCP server failed to start within 30s"
             raise TimeoutError(msg)
+        logger.info("MCP connected tools=%s", [tool.name for tool in self._tools])
 
     def close(self) -> None:
         """Shut down MCP session and subprocess."""
         if self._loop is None or self._stop_async is None:
             return
+        logger.info("MCP close")
         self._loop.call_soon_threadsafe(self._stop_async.set)
         self._stopped.wait(timeout=30)
         if self._thread is not None:
@@ -92,8 +101,12 @@ class BankingMcpClient:
             assert self._session is not None
             return await self._session.call_tool(name, arguments or {})
 
+        arg_keys = sorted((arguments or {}).keys())
+        logger.info("MCP call_tool name=%s arg_keys=%s", name, arg_keys)
         result = asyncio.run_coroutine_threadsafe(_call(), self._loop).result(timeout=60)
-        return call_tool_result_to_text(result)
+        text = call_tool_result_to_text(result)
+        logger.info("MCP call_tool result=%s", truncate_for_log(text))
+        return text
 
     def list_resources(self) -> list[types.Resource]:
         """Return resources advertised by the MCP server."""
@@ -106,7 +119,10 @@ class BankingMcpClient:
             listed = await self._session.list_resources()
             return list(listed.resources)
 
-        return asyncio.run_coroutine_threadsafe(_list(), self._loop).result(timeout=60)
+        resources = asyncio.run_coroutine_threadsafe(_list(), self._loop).result(timeout=60)
+        uris = [str(resource.uri) for resource in resources]
+        logger.info("MCP list_resources count=%s uris=%s", len(uris), uris)
+        return resources
 
     def read_resource(self, uri: str) -> str:
         """Read an MCP resource by URI and return its text content."""
@@ -118,8 +134,16 @@ class BankingMcpClient:
             assert self._session is not None
             return await self._session.read_resource(AnyUrl(uri))
 
+        logger.info("MCP read_resource uri=%s", uri)
         result = asyncio.run_coroutine_threadsafe(_read(), self._loop).result(timeout=60)
-        return read_resource_result_to_text(result)
+        text = read_resource_result_to_text(result)
+        logger.info(
+            "MCP read_resource uri=%s chars=%s preview=%s",
+            uri,
+            len(text),
+            truncate_for_log(text, 120),
+        )
+        return text
 
     def _thread_main(self) -> None:
         self._loop = asyncio.new_event_loop()

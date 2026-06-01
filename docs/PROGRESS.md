@@ -1,11 +1,24 @@
 # Progress
 
-**Active plan:** `docs/plans/03-file-logging.md`  
-**Goal:** Session file logging under `logs/`; Yandex API errors (`status_code`, body) in log file; rich console unchanged for lecture.
+**Active plan:** none (plan 03 complete — commit when ready)  
+**Next:** manual smoke from `docs/plans/03-file-logging.md`
 
 ---
 
 ## Journal
+
+## Wave: docs/plans/03-file-logging.md — File logging + Yandex API diagnostics
+
+- [x] `.gitignore` — `logs/`
+- [x] `src/adapters/logging_setup.py` — `setup_logging()`, `LOG_LEVEL`
+- [x] `src/adapters/llm_logging.py` — request/response/error helpers, redaction
+- [x] Instrument `repl.py`, `router.py`, `agent_loop.py`, `mcp_client.py`
+- [x] `.env.example` — `LOG_LEVEL`
+- [x] `README.md` — logs section
+- [x] `tests/adapters/test_logging_setup.py`
+- [x] `docs/INDEX.md` — logging modules + `logs/`
+
+---
 
 ## Wave: docs/plans/02-db-paths-and-bank-services.md — DB paths + bank services resource
 
